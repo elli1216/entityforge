@@ -17,10 +17,10 @@ The application operates as a pure data-transformation pipeline, entirely in the
 
 _Establish a rock-solid, type-safe data contract so state lives completely inside the URL._
 
-- [ ] **1.1 Initialization:** Scaffold the Vite project and install `@xyflow/react`, `@tanstack/react-router`, `@tanstack/react-query`, `zod`, and `jszip`.
-- [ ] **1.2 Zod Schema:** Define a schema representing the React Flow state (entities, fields, and database relationships).
-- [ ] **1.3 Router Config:** Configure the `/workspace` route to accept and validate the Zod schema via URL search parameters.
-- [ ] **1.4 Persistence Sync:** Wire TanStack Query to automatically sync URL state changes into `localStorage` (e.g., `current_draft`) as a background fallback.
+- [/] **1.1 Initialization:** Scaffold the Vite project and install `@xyflow/react`, `@tanstack/react-router`, `@tanstack/react-query`, `zod`, and `jszip`.
+- [/] **1.2 Zod Schema:** Define a schema representing the React Flow state (entities, fields, and database relationships).
+- [/] **1.3 Router Config:** Configure the `/workspace` route to accept and validate the Zod schema via URL search parameters.
+- [/] **1.4 Persistence Sync:** Wire TanStack Query to automatically sync URL state changes into `localStorage` (e.g., `current_draft`) as a background fallback.
 
 ### Phase 2: The Interactive React Flow Canvas
 
