@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { RELATIONSHIP_TYPE_VALUES, RELATIONSHIP_TYPES } from './relationship-types'
 
 export const FieldSchema = z.object({
   id: z.string(),
@@ -21,8 +22,8 @@ export const EntityNodeSchema = z.object({
 
 export const RelationshipEdgeDataSchema = z.object({
   relationshipType: z
-    .enum(['one-to-many', 'many-to-one', 'one-to-one', 'many-to-many'])
-    .default('many-to-one'),
+    .enum(RELATIONSHIP_TYPE_VALUES)
+    .default(RELATIONSHIP_TYPES.MANY_TO_ONE),
 })
 
 export const RelationshipEdgeSchema = z.object({
@@ -32,7 +33,7 @@ export const RelationshipEdgeSchema = z.object({
   sourceHandle: z.string().optional(),
   targetHandle: z.string().optional(),
   type: z.string().default('default'),
-  data: RelationshipEdgeDataSchema.default({ relationshipType: 'many-to-one' }),
+  data: RelationshipEdgeDataSchema.default({ relationshipType: RELATIONSHIP_TYPES.MANY_TO_ONE }),
 })
 
 export const WorkspaceSchema = z.object({

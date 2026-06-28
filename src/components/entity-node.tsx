@@ -5,6 +5,7 @@ import type { Field, EntityNodeData } from '#/lib/schema'
 
 export type EntityNodeCallbacks = {
   onUpdateNode: (nodeId: string, data: Partial<EntityNodeData>) => void
+  onDeleteNode: (nodeId: string) => void
 }
 
 function FieldRow({
@@ -50,8 +51,8 @@ function FieldRow({
         ))}
       </select>
       <button
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs opacity-0 transition-opacity group-hover:opacity-60 hover:opacity-100!"
-        onClick={() => onDelete(field.id)}
+        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs opacity-0 transition-opacity group-hover:opacity-60 hover:opacity-100!"
+        onClick={(e) => { e.stopPropagation(); onDelete(field.id) }}
         style={{ color: 'var(--java-muted)' }}
         title="Delete field"
       >
@@ -65,7 +66,7 @@ function PkBadge({ active, onClick }: { active: boolean; onClick: () => void }) 
   return (
     <button
       className="flex h-5 shrink-0 cursor-pointer items-center rounded px-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors"
-      onClick={onClick}
+      onClick={(e) => { e.stopPropagation(); onClick() }}
       style={{
         backgroundColor: active ? 'var(--java-orange)' : 'transparent',
         color: active ? 'white' : 'var(--java-muted)',
@@ -78,8 +79,14 @@ function PkBadge({ active, onClick }: { active: boolean; onClick: () => void }) 
   )
 }
 
-export function EntityNode({ id, data, selected }: NodeProps & { data: EntityNodeData & EntityNodeCallbacks }) {
-  const { tableName, fields, onUpdateNode } = data
+export function EntityNode({
+  id,
+  data,
+  selected,
+}: NodeProps & {
+  data: EntityNodeData & EntityNodeCallbacks
+}) {
+  const { tableName, fields, onUpdateNode, onDeleteNode } = data
   const [localTableName, setLocalTableName] = useState(tableName)
   const tableRef = useRef(tableName)
 
@@ -122,17 +129,29 @@ export function EntityNode({ id, data, selected }: NodeProps & { data: EntityNod
     [id, fields, onUpdateNode],
   )
 
-  const handleAddField = useCallback(() => {
-    const newField: Field = {
-      id: crypto.randomUUID(),
-      name: '',
-      type: 'VARCHAR',
-      isPrimaryKey: false,
-      isNullable: true,
-      isUnique: false,
-    }
-    onUpdateNode(id, { fields: [...fields, newField] })
-  }, [id, fields, onUpdateNode])
+  const handleAddField = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      const newField: Field = {
+        id: crypto.randomUUID(),
+        name: '',
+        type: 'VARCHAR',
+        isPrimaryKey: false,
+        isNullable: true,
+        isUnique: false,
+      }
+      onUpdateNode(id, { fields: [...fields, newField] })
+    },
+    [id, fields, onUpdateNode],
+  )
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onDeleteNode(id)
+    },
+    [id, onDeleteNode],
+  )
 
   return (
     <div
@@ -145,7 +164,11 @@ export function EntityNode({ id, data, selected }: NodeProps & { data: EntityNod
           : '0 4px 16px rgba(0,0,0,0.08)',
       }}
     >
-      <Handle type="target" position={Position.Left} style={{ background: 'var(--java-blue)', width: 10, height: 10, border: '2px solid var(--java-cream)' }} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ background: 'var(--java-blue)', width: 10, height: 10, border: '2px solid var(--java-cream)' }}
+      />
 
       <div
         className="flex items-center gap-2 rounded-t-xl px-3 py-2"
@@ -160,6 +183,13 @@ export function EntityNode({ id, data, selected }: NodeProps & { data: EntityNod
           onChange={(e) => setLocalTableName(e.target.value)}
           onBlur={handleTableNameBlur}
         />
+        <button
+          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs text-white/60 transition-colors hover:text-white"
+          onClick={handleDelete}
+          title="Delete entity"
+        >
+          ×
+        </button>
       </div>
 
       <div className="max-h-48 overflow-y-auto">

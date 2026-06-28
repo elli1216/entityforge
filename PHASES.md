@@ -37,9 +37,9 @@ _Build the drag-and-drop workspace._
 
 _Create stateless utility functions that transform JSON into code._
 
-- [ ] **3.1 JPA Generator (`jpaGenerator.ts`):** Transform node fields into standard Java strings (includes `@Entity`, `@Table`, `@Id`, data types, and empty constructors).
-- [ ] **3.2 Relationship Parser (`relationshipParser.ts`):** Read edge connections to inject `@ManyToOne`, `@OneToMany`, etc., alongside join columns into the Java strings.
-- [ ] **3.3 DDL Generator (`ddlGenerator.ts`):** Transform nodes and edges into syntax-valid SQL strings (`CREATE TABLE ...`) for Flyway/Liquibase.
+- [/] **3.1 JPA Generator (`jpaGenerator.ts`):** Transform node fields into standard Java strings (includes `@Entity`, `@Table`, `@Id`, data types, and empty constructors).
+- [/] **3.2 Relationship Parser (`relationshipParser.ts`):** Read edge connections to inject `@ManyToOne`, `@OneToMany`, etc., alongside join columns into the Java strings.
+- [/] **3.3 DDL Generator (`ddlGenerator.ts`):** Transform nodes and edges into syntax-valid SQL strings (`CREATE TABLE ...`) for Flyway/Liquibase.
 
 ### Phase 4: Tabbed Live Code Viewers
 
