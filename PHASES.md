@@ -26,12 +26,12 @@ _Establish a rock-solid, type-safe data contract so state lives completely insid
 
 _Build the drag-and-drop workspace._
 
-- [ ] **2.1 Custom Entity Node:** Create an `EntityNode` component containing:
+- [/] **2.1 Custom Entity Node:** Create an `EntityNode` component containing:
   - Table/Class name input.
   - A dynamic list of fields (Name, Type dropdown, Primary Key toggle).
   - An embedded "Add Field" button.
-- [ ] **2.2 Handles & Edges:** Configure source (right) and target (left) handles on the `EntityNode` to allow drag-and-drop relationship mapping.
-- [ ] **2.3 State Syncing:** Map React Flow's `onNodesChange`, `onEdgesChange`, and `onConnect` callbacks to TanStack Router's navigation function to update URL params instantly.
+- [/] **2.2 Handles & Edges:** Configure source (right) and target (left) handles on the `EntityNode` to allow drag-and-drop relationship mapping.
+- [/] **2.3 State Syncing:** Map React Flow's `onNodesChange`, `onEdgesChange`, and `onConnect` callbacks to TanStack Router's navigation function to update URL params instantly.
 
 ### Phase 3: Pure TypeScript String Generators
 
