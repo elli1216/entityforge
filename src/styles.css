@@ -363,6 +363,20 @@ a {
 .hljs-built_in { color: #005cc5; }
 .hljs-meta { color: #6a737d; }
 
+.dark .hljs {
+  color: #e8e4e0;
+}
+.dark .hljs-keyword { color: #f97583; }
+.dark .hljs-string { color: #9ecbff; }
+.dark .hljs-comment { color: #8b949e; font-style: italic; }
+.dark .hljs-type { color: #79c0ff; }
+.dark .hljs-title { color: #d2a8ff; }
+.dark .hljs-literal { color: #79c0ff; }
+.dark .hljs-number { color: #79c0ff; }
+.dark .hljs-attr { color: #ffab70; }
+.dark .hljs-built_in { color: #79c0ff; }
+.dark .hljs-meta { color: #8b949e; }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

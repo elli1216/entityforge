@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { useWorkspace } from '#/hooks/useWorkspace'
 import { Canvas } from '#/components/canvas'
 import { CodeViewer } from '#/components/code-viewer'
+import { ThemeToggle } from '#/components/theme-toggle'
 
 const searchSchema = z.object({
   draft: z.string().optional(),
@@ -38,6 +39,7 @@ function WorkspacePage() {
           >
             + New Entity
           </button>
+          <ThemeToggle />
           <button
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-sm transition-colors"
             onClick={() => setSidebarOpen((o) => !o)}
