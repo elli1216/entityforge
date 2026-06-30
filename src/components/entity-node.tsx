@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { Handle, Position } from '@xyflow/react'
+import type { NodeProps } from '@xyflow/react'
 import { FIELD_TYPES } from './field-types'
 import type { Field, EntityNodeData } from '#/lib/schema'
 
@@ -121,8 +122,11 @@ export function EntityNode({
 
   const handleTogglePk = useCallback(
     (fieldId: string) => {
+      const target = fields.find((f) => f.id === fieldId)
+      if (!target) return
+      const makePk = !target.isPrimaryKey
       const newFields = fields.map((f) =>
-        f.id === fieldId ? { ...f, isPrimaryKey: !f.isPrimaryKey } : f,
+        f.id === fieldId ? { ...f, isPrimaryKey: makePk } : { ...f, isPrimaryKey: false },
       )
       onUpdateNode(id, { fields: newFields })
     },

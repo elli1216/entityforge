@@ -10,6 +10,9 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import appCss from '../styles.css?url'
 
+import { NotFound } from '#/components/not-found'
+import { ErrorFallback } from '#/components/error-fallback'
+
 import type { QueryClient } from '@tanstack/react-query'
 
 interface MyRouterContext {
@@ -17,6 +20,8 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  notFoundComponent: NotFound,
+  errorComponent: ErrorFallback,
   head: () => ({
     meta: [
       {
