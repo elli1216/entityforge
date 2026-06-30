@@ -35,12 +35,14 @@ function Home() {
             <div className="mb-4 inline-block rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--java-orange)', borderColor: 'var(--java-orange)' }}>
               Visual Entity Designer
             </div>
-            <h1 className="display-title text-4xl font-bold leading-tight md:text-6xl">
-              Design Database Entities{' '}
-              <span style={{ color: 'var(--java-orange)' }}>Visually</span>
+            <h1 className="flex items-center justify-center gap-4 display-title text-4xl font-bold leading-tight md:text-6xl">
+              <img className='size-30' src="/header-logo.png" alt="Logo" />
+              <span style={{ color: 'var(--java-orange)' }} className='mt-5'>EntityForge</span>
+            </h1>
+            <h1 className='display-title text-2xl font-bold leading-tight md:text-4xl'>
               <br />
-              Generate Spring Boot Code{' '}
-              <span style={{ color: 'var(--java-blue)' }}>Instantly</span>
+              Design Database Entities{' '}
+              <span style={{ color: 'var(--java-blue)' }}>Visually</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed" style={{ color: 'var(--java-muted)' }}>
               A drag-and-drop canvas to model JPA entities, define relationships, and
