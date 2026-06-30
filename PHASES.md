@@ -45,8 +45,8 @@ _Create stateless utility functions that transform JSON into code._
 
 _Display the generated output to the user in real-time._
 
-- [ ] **4.1 Layout:** Build a split-screen or bottom-docked panel below the main React Flow canvas.
-- [ ] **4.2 Code Blocks:** Create syntax-highlighted tabs for **JPA Entity Code**, **Flyway SQL**, and **Raw JSON Schema**. Ensure these re-render instantly upon URL state changes.
+- [/] **4.1 Layout:** Build a split-screen or bottom-docked panel below the main React Flow canvas.
+- [/] **4.2 Code Blocks:** Create syntax-highlighted tabs for **JPA Entity Code**, **Flyway SQL**, and **Raw JSON Schema**. Ensure these re-render instantly upon URL state changes.
 
 ### Phase 5: Client-Side Project Exporter
 
