@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { z } from 'zod'
 import { useWorkspace } from '#/hooks/useWorkspace'
 import { Canvas } from '#/components/canvas'
 import { CodeViewer } from '#/components/code-viewer'
 import { ThemeToggle } from '#/components/theme-toggle'
+import { exportProject } from '#/lib/project-exporter'
 
 const searchSchema = z.object({
   draft: z.string().optional(),
@@ -15,9 +16,133 @@ export const Route = createFileRoute('/workspace')({
   component: WorkspacePage,
 })
 
+function ExportDialog({
+  open,
+  onClose,
+  workspace,
+}: {
+  open: boolean
+  onClose: () => void
+  workspace: Parameters<typeof exportProject>[0]
+}) {
+  const [groupId, setGroupId] = useState('com.entityforge')
+  const [artifactId, setArtifactId] = useState('entity-forge-app')
+  const [packageName, setPackageName] = useState('com.entityforge.domain')
+  const [version, setVersion] = useState('1.0.0')
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = useCallback(async () => {
+    setExporting(true)
+    try {
+      await exportProject(workspace, { groupId, artifactId, packageName, version })
+      onClose()
+    } catch {
+      // download failed
+    } finally {
+      setExporting(false)
+    }
+  }, [workspace, groupId, artifactId, packageName, version, onClose])
+
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-xl border p-6 shadow-xl"
+        style={{
+          backgroundColor: 'var(--bg-base)',
+          borderColor: 'var(--line)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="display-title text-lg font-bold">Export Project</h2>
+        <p className="mt-1 text-xs" style={{ color: 'var(--java-muted)' }}>
+          Configure your Maven project and download a ZIP.
+        </p>
+        <div className="mt-5 flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold">Group ID</span>
+            <input
+              className="rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-(--java-orange)"
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              style={{
+                backgroundColor: 'var(--chip-bg)',
+                borderColor: 'var(--line)',
+                color: 'var(--java-dark)',
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold">Artifact ID</span>
+            <input
+              className="rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-(--java-orange)"
+              value={artifactId}
+              onChange={(e) => setArtifactId(e.target.value)}
+              style={{
+                backgroundColor: 'var(--chip-bg)',
+                borderColor: 'var(--line)',
+                color: 'var(--java-dark)',
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold">Package</span>
+            <input
+              className="rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-(--java-orange)"
+              value={packageName}
+              onChange={(e) => setPackageName(e.target.value)}
+              style={{
+                backgroundColor: 'var(--chip-bg)',
+                borderColor: 'var(--line)',
+                color: 'var(--java-dark)',
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold">Version</span>
+            <input
+              className="rounded-lg border px-3 py-2 text-sm outline-none transition-colors focus:border-(--java-orange)"
+              value={version}
+              onChange={(e) => setVersion(e.target.value)}
+              style={{
+                backgroundColor: 'var(--chip-bg)',
+                borderColor: 'var(--line)',
+                color: 'var(--java-dark)',
+              }}
+            />
+          </label>
+        </div>
+        <div className="mt-6 flex items-center justify-end gap-2">
+          <button
+            className="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+            onClick={onClose}
+            style={{ color: 'var(--java-muted)' }}
+          >
+            Cancel
+          </button>
+          <button
+            className="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+            style={{ backgroundColor: 'var(--java-orange)' }}
+            disabled={exporting}
+            onClick={handleExport}
+          >
+            {exporting ? 'Exporting...' : 'Download ZIP'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function WorkspacePage() {
   const { workspace, updateWorkspace, addEntity } = useWorkspace()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   return (
     <div className="flex h-screen flex-col">
@@ -39,6 +164,18 @@ function WorkspacePage() {
           >
             + New Entity
           </button>
+          <button
+            className="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+            style={{
+              color: 'var(--java-blue)',
+              border: '1px solid var(--java-blue)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0,115,150,0.08)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+            onClick={() => setExportOpen(true)}
+          >
+            Export
+          </button>
           <ThemeToggle />
           <button
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-sm transition-colors"
@@ -56,6 +193,7 @@ function WorkspacePage() {
           </button>
         </div>
       </header>
+      <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)} workspace={workspace} />
       <main className="flex flex-1 overflow-hidden">
         {workspace.nodes.length === 0 && !sidebarOpen ? (
           <div className="flex flex-1 items-center justify-center">

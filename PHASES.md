@@ -52,8 +52,8 @@ _Display the generated output to the user in real-time._
 
 _Package the generated strings into a downloadable Maven structure._
 
-- [ ] **5.1 JSZip Setup:** Create an export utility that instantiates `new JSZip()`.
-- [ ] **5.2 Directory Scaffolding:** Use project metadata to generate virtual folders:
+- [/] **5.1 JSZip Setup:** Create an export utility that instantiates `new JSZip()`.
+- [/] **5.2 Directory Scaffolding:** Use project metadata to generate virtual folders:
   - `src/main/java/com/yourcompany/domain/`
   - `src/main/resources/db/migration/`
-- [ ] **5.3 Compilation:** Populate the virtual folders with the strings from Phase 3, compile via `zip.generateAsync()`, and trigger a native browser download for the `.zip` file.
+- [/] **5.3 Compilation:** Populate the virtual folders with the strings from Phase 3, compile via `zip.generateAsync()`, and trigger a native browser download for the `.zip` file.
