@@ -1,12 +1,40 @@
 import { useCallback, useRef, useState } from 'react'
-import { Handle, Position } from '@xyflow/react'
-import type { NodeProps } from '@xyflow/react'
+import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { FIELD_TYPES } from './field-types'
 import type { Field, EntityNodeData } from '#/lib/schema'
 
 export type EntityNodeCallbacks = {
   onUpdateNode: (nodeId: string, data: Partial<EntityNodeData>) => void
   onDeleteNode: (nodeId: string) => void
+}
+
+const STRING_TYPES = new Set(['VARCHAR', 'ENUM', 'CHAR'])
+const DECIMAL_TYPES = new Set(['DECIMAL', 'NUMERIC'])
+
+function Badge({
+  label,
+  active,
+  activeColor,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  activeColor: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      className="flex h-5 shrink-0 cursor-pointer items-center rounded px-1 text-[9px] font-semibold uppercase tracking-wider transition-colors"
+      onClick={(e) => { e.stopPropagation(); onClick() }}
+      style={{
+        backgroundColor: active ? activeColor : 'transparent',
+        color: active ? 'white' : 'var(--java-muted)',
+        border: active ? 'none' : '1px solid var(--line)',
+      }}
+    >
+      {label}
+    </button>
+  )
 }
 
 function FieldRow({
@@ -20,26 +48,43 @@ function FieldRow({
 }) {
   const [name, setName] = useState(field.name)
   const [type, setType] = useState(field.type)
+  const [lengthVal, setLengthVal] = useState(String(field.length ?? ''))
+  const [precisionVal, setPrecisionVal] = useState(String(field.precision ?? ''))
+  const [scaleVal, setScaleVal] = useState(String(field.scale ?? ''))
 
-  const handleBlur = useCallback(() => {
-    onChange(field.id, { name, type })
-  }, [field.id, name, type, onChange])
+  const flush = useCallback(() => {
+    const updates: Partial<Field> = { name, type }
+    if (STRING_TYPES.has(type)) {
+      const n = lengthVal === '' ? undefined : Number(lengthVal)
+      updates.length = (n && n > 0) ? n : undefined
+    }
+    if (DECIMAL_TYPES.has(type)) {
+      const p = precisionVal === '' ? undefined : Number(precisionVal)
+      const s = scaleVal === '' ? undefined : Number(scaleVal)
+      updates.precision = (p && p > 0) ? p : undefined
+      updates.scale = (s != null && s >= 0) ? s : undefined
+    }
+    onChange(field.id, updates)
+  }, [field.id, name, type, lengthVal, precisionVal, scaleVal, onChange])
+
+  const isString = STRING_TYPES.has(type)
+  const isDecimal = DECIMAL_TYPES.has(type)
 
   return (
-    <div className="group flex items-center gap-1.5 border-b px-2 py-1.5 text-sm" style={{ borderColor: 'var(--line)' }}>
+    <div className="group flex flex-wrap items-center gap-1 border-b px-2 py-1.5 text-sm" style={{ borderColor: 'var(--line)' }}>
       <input
         className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-xs outline-none"
         placeholder="field_name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        onBlur={handleBlur}
+        onBlur={flush}
         style={{ color: 'var(--java-dark)' }}
       />
       <select
-        className="w-22 rounded px-1 py-0.5 text-xs outline-none"
+        className="w-20 rounded px-1 py-0.5 text-xs outline-none"
         value={type}
-        onChange={(e) => setType(e.target.value)}
-        onBlur={handleBlur}
+        onChange={(e) => { setType(e.target.value); setLengthVal(''); setPrecisionVal(''); setScaleVal('') }}
+        onBlur={flush}
         style={{
           backgroundColor: 'var(--chip-bg)',
           borderColor: 'var(--chip-line)',
@@ -51,32 +96,90 @@ function FieldRow({
           <option key={t} value={t}>{t}</option>
         ))}
       </select>
+
+      {isString && (
+        <input
+          className="w-12 rounded px-1 py-0.5 text-[10px] outline-none"
+          placeholder="255"
+          value={lengthVal}
+          onChange={(e) => setLengthVal(e.target.value)}
+          onBlur={flush}
+          title="Length"
+          style={{
+            backgroundColor: 'var(--chip-bg)',
+            borderColor: 'var(--chip-line)',
+            color: 'var(--java-muted)',
+            border: '1px solid',
+          }}
+        />
+      )}
+
+      {isDecimal && (
+        <span className="flex items-center gap-0.5 text-[10px]" style={{ color: 'var(--java-muted)' }}>
+          (
+          <input
+            className="w-8 rounded px-1 py-0.5 text-[10px] outline-none"
+            placeholder="19"
+            value={precisionVal}
+            onChange={(e) => setPrecisionVal(e.target.value)}
+            onBlur={flush}
+            title="Precision"
+            style={{
+              backgroundColor: 'var(--chip-bg)',
+              borderColor: 'var(--chip-line)',
+              color: 'var(--java-muted)',
+              border: '1px solid',
+            }}
+          />
+          ,
+          <input
+            className="w-8 rounded px-1 py-0.5 text-[10px] outline-none"
+            placeholder="2"
+            value={scaleVal}
+            onChange={(e) => setScaleVal(e.target.value)}
+            onBlur={flush}
+            title="Scale"
+            style={{
+              backgroundColor: 'var(--chip-bg)',
+              borderColor: 'var(--chip-line)',
+              color: 'var(--java-muted)',
+              border: '1px solid',
+            }}
+          />
+          )
+        </span>
+      )}
+
+      <div className="flex items-center gap-0.5">
+        <Badge
+          label="PK"
+          active={field.isPrimaryKey}
+          activeColor="var(--java-orange)"
+          onClick={() => onChange(field.id, { isPrimaryKey: !field.isPrimaryKey })}
+        />
+        <Badge
+          label="NL"
+          active={!field.isNullable}
+          activeColor="var(--java-blue)"
+          onClick={() => onChange(field.id, { isNullable: !field.isNullable })}
+        />
+        <Badge
+          label="UN"
+          active={field.isUnique}
+          activeColor="var(--java-orange-glow)"
+          onClick={() => onChange(field.id, { isUnique: !field.isUnique })}
+        />
+      </div>
+
       <button
-        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs opacity-0 transition-opacity group-hover:opacity-60 hover:opacity-100!"
+        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs transition-opacity hover:opacity-100"
         onClick={(e) => { e.stopPropagation(); onDelete(field.id) }}
-        style={{ color: 'var(--java-muted)' }}
+        style={{ color: 'var(--java-muted)', opacity: 0.4 }}
         title="Delete field"
       >
         ×
       </button>
     </div>
-  )
-}
-
-function PkBadge({ active, onClick }: { active: boolean; onClick: () => void }) {
-  return (
-    <button
-      className="flex h-5 shrink-0 cursor-pointer items-center rounded px-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors"
-      onClick={(e) => { e.stopPropagation(); onClick() }}
-      style={{
-        backgroundColor: active ? 'var(--java-orange)' : 'transparent',
-        color: active ? 'white' : 'var(--java-muted)',
-        border: active ? 'none' : '1px solid var(--line)',
-      }}
-      title={active ? 'Primary key' : 'Toggle primary key'}
-    >
-      PK
-    </button>
   )
 }
 
@@ -104,8 +207,13 @@ export function EntityNode({
 
   const handleFieldChange = useCallback(
     (fieldId: string, updates: Partial<Field>) => {
+      const enablingPk = updates.isPrimaryKey === true
       const newFields = fields.map((f) =>
-        f.id === fieldId ? { ...f, ...updates } : f,
+        f.id === fieldId
+          ? { ...f, ...updates }
+          : enablingPk
+            ? { ...f, isPrimaryKey: false }
+            : f,
       )
       onUpdateNode(id, { fields: newFields })
     },
@@ -115,19 +223,6 @@ export function EntityNode({
   const handleDeleteField = useCallback(
     (fieldId: string) => {
       const newFields = fields.filter((f) => f.id !== fieldId)
-      onUpdateNode(id, { fields: newFields })
-    },
-    [id, fields, onUpdateNode],
-  )
-
-  const handleTogglePk = useCallback(
-    (fieldId: string) => {
-      const target = fields.find((f) => f.id === fieldId)
-      if (!target) return
-      const makePk = !target.isPrimaryKey
-      const newFields = fields.map((f) =>
-        f.id === fieldId ? { ...f, isPrimaryKey: makePk } : { ...f, isPrimaryKey: false },
-      )
       onUpdateNode(id, { fields: newFields })
     },
     [id, fields, onUpdateNode],
@@ -143,6 +238,9 @@ export function EntityNode({
         isPrimaryKey: false,
         isNullable: true,
         isUnique: false,
+        length: undefined,
+        precision: undefined,
+        scale: undefined,
       }
       onUpdateNode(id, { fields: [...fields, newField] })
     },
@@ -159,7 +257,7 @@ export function EntityNode({
 
   return (
     <div
-      className="min-w-48 rounded-xl border-2 shadow-lg transition-shadow"
+      className="min-w-56 rounded-xl border-2 shadow-lg transition-shadow"
       style={{
         borderColor: selected ? 'var(--java-orange)' : 'var(--line)',
         backgroundColor: 'var(--java-cream)',
@@ -196,19 +294,14 @@ export function EntityNode({
         </button>
       </div>
 
-      <div className="max-h-48 overflow-y-auto">
+      <div className="max-h-56 overflow-y-auto">
         {fields.map((field) => (
-          <div key={field.id} className="flex items-center gap-1 pr-2">
-            <FieldRow
-              field={field}
-              onChange={handleFieldChange}
-              onDelete={handleDeleteField}
-            />
-            <PkBadge
-              active={field.isPrimaryKey}
-              onClick={() => handleTogglePk(field.id)}
-            />
-          </div>
+          <FieldRow
+            key={field.id}
+            field={field}
+            onChange={handleFieldChange}
+            onDelete={handleDeleteField}
+          />
         ))}
       </div>
 

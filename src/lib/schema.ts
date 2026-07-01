@@ -8,6 +8,9 @@ export const FieldSchema = z.object({
   isPrimaryKey: z.boolean().default(false),
   isNullable: z.boolean().default(true),
   isUnique: z.boolean().default(false),
+  length: z.number().positive().optional(),
+  precision: z.number().positive().optional(),
+  scale: z.number().nonnegative().optional(),
 })
 
 export const EntityNodeSchema = z.object({

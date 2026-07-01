@@ -3,6 +3,17 @@ import { toCamelCase, toPascalCase, singularize } from './java-types'
 import { RELATIONSHIP_TYPES } from './relationship-types'
 import type { RelationshipType } from './relationship-types'
 
+const JAVA_RESERVED = new Set([
+  'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch',
+  'char', 'class', 'const', 'continue', 'default', 'do', 'double',
+  'else', 'enum', 'extends', 'false', 'final', 'finally', 'float',
+  'for', 'goto', 'if', 'implements', 'import', 'instanceof', 'int',
+  'interface', 'long', 'native', 'new', 'null', 'package', 'private',
+  'protected', 'public', 'return', 'short', 'static', 'strictfp',
+  'super', 'switch', 'synchronized', 'this', 'throw', 'throws',
+  'transient', 'true', 'try', 'void', 'volatile', 'while',
+])
+
 export type RelationshipField = {
   annotation: string
   fieldDeclaration: string
@@ -28,8 +39,12 @@ function classNameOf(node: EntityNode): string {
   return toPascalCase(singularize(node.data.tableName))
 }
 
+function safeFieldName(name: string): string {
+  return JAVA_RESERVED.has(name) ? name + 'Entity' : name
+}
+
 function fkFieldName(node: EntityNode): string {
-  return toCamelCase(singularize(node.data.tableName))
+  return safeFieldName(toCamelCase(singularize(node.data.tableName)))
 }
 
 function joinColName(node: EntityNode): string {
@@ -85,8 +100,9 @@ export function parseRelationships(
 
     if (edge.target === nodeId) {
       if (t === RELATIONSHIP_TYPES.ONE_TO_MANY)
+        owning.push(manyToOne(src))
+      else if (t === RELATIONSHIP_TYPES.MANY_TO_ONE)
         inverse.push(oneToMany(src, tgt))
-      else if (t === RELATIONSHIP_TYPES.MANY_TO_ONE) owning.push(manyToOne(src))
       else if (t === RELATIONSHIP_TYPES.ONE_TO_ONE)
         inverse.push(oneToOneInverse(src, tgt))
       else inverse.push(manyToManyInverse(src, tgt))

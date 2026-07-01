@@ -57,3 +57,5 @@ _Package the generated strings into a downloadable Maven structure._
   - `src/main/java/com/yourcompany/domain/`
   - `src/main/resources/db/migration/`
 - [/] **5.3 Compilation:** Populate the virtual folders with the strings from Phase 3, compile via `zip.generateAsync()`, and trigger a native browser download for the `.zip` file.
+
+

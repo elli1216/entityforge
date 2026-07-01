@@ -84,7 +84,15 @@ function buildFieldLines(
       const parts: string[] = []
       if (!field.isNullable) parts.push('nullable = false')
       if (field.isUnique) parts.push('unique = true')
-      if (info.sqlType === 'VARCHAR(255)') parts.push('length = 255')
+      if (field.length != null) {
+        parts.push(`length = ${field.length}`)
+      } else if (info.sqlType.startsWith('VARCHAR')) {
+        parts.push('length = 255')
+      }
+      if (field.precision != null) {
+        const sc = field.scale != null ? `, scale = ${field.scale}` : ''
+        parts.push(`precision = ${field.precision}${sc}`)
+      }
       const attrs = parts.length > 0 ? `, ${parts.join(', ')}` : ''
       lines.push({ content: '', sortKey: sortKey++ })
       lines.push({ content: `    @Column(name = "${colName}"${attrs})`, sortKey: sortKey++ })
