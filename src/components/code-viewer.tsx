@@ -6,6 +6,7 @@ import json from 'highlight.js/lib/languages/json'
 import type { Workspace } from '#/lib/schema'
 import { generateJpaEntity } from '#/lib/jpa-generator'
 import { generateDdl } from '#/lib/ddl-generator'
+import { handleError } from '#/lib/error-handler'
 
 hljs.registerLanguage('java', java)
 hljs.registerLanguage('sql', sql)
@@ -70,8 +71,8 @@ export function CodeViewer({ workspace }: Props) {
       await navigator.clipboard.writeText(activeFile.code)
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
-    } catch {
-      // clipboard unavailable
+    } catch (e) {
+      handleError(e, 'Copy failed')
     }
   }, [activeFile])
 

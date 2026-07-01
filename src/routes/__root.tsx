@@ -10,6 +10,7 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import appCss from '../styles.css?url'
 
+import { Toaster } from 'sonner'
 import { NotFound } from '#/components/not-found'
 import { ErrorFallback } from '#/components/error-fallback'
 
@@ -66,6 +67,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: 'var(--bg-base)',
+              border: '1px solid var(--line)',
+              color: 'var(--java-dark)',
+            },
+          }}
+        />
         <TanStackDevtools
           config={{
             position: 'bottom-right',

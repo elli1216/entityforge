@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { exportProject, SPRING_BOOT_VERSIONS, JAVA_VERSIONS } from '#/lib/project-exporter'
 import type { ProdDb } from '#/lib/project-exporter'
+import { handleError } from '#/lib/error-handler'
 
 export function ExportDialog({
   open,
@@ -26,8 +27,8 @@ export function ExportDialog({
     try {
       await exportProject(workspace, { groupId, artifactId, packageName, version, useH2, prodDb, springBootVersion, javaVersion })
       onClose()
-    } catch {
-      // download failed
+    } catch (e) {
+      handleError(e, 'Export failed')
     } finally {
       setExporting(false)
     }

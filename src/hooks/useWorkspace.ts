@@ -4,6 +4,7 @@ import { Route } from '#/routes/workspace'
 import { WorkspaceSchema } from '#/lib/schema'
 import type { Workspace, Field } from '#/lib/schema'
 
+
 const STORAGE_KEY = 'current_draft'
 
 function parseWorkspace(draft: string | undefined): Workspace {
