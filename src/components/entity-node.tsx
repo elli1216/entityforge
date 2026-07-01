@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
-import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { FIELD_TYPES } from './field-types'
+import { Handle, Position } from '@xyflow/react'
+import type { NodeProps } from '@xyflow/react'
+import { FIELD_TYPES } from '../lib/field-types'
 import type { Field, EntityNodeData } from '#/lib/schema'
 
 export type EntityNodeCallbacks = {

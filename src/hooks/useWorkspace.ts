@@ -103,5 +103,9 @@ export function useWorkspace() {
     }
   }, [draft, navigate])
 
-  return { workspace, updateWorkspace, addEntity }
+  const resetWorkspace = useCallback(() => {
+    updateWorkspace({ nodes: [], edges: [] })
+  }, [updateWorkspace])
+
+  return { workspace, updateWorkspace, addEntity, resetWorkspace }
 }

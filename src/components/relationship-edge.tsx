@@ -4,8 +4,8 @@ import {
   getBezierPath,
   EdgeLabelRenderer,
   useReactFlow,
-  type EdgeProps,
 } from '@xyflow/react'
+import type { EdgeProps } from '@xyflow/react'
 import { RELATIONSHIP_TYPES } from '#/lib/relationship-types'
 import type { RelationshipEdgeData } from '#/lib/schema'
 
@@ -77,7 +77,7 @@ export function RelationshipEdge({
         >
           <select
             className="cursor-pointer appearance-none bg-transparent text-center text-[10px] font-semibold text-white outline-none"
-            value={data?.relationshipType ?? RELATIONSHIP_TYPES.MANY_TO_ONE}
+            value={data.relationshipType}
             onChange={handleTypeChange}
             onClick={(e) => e.stopPropagation()}
           >

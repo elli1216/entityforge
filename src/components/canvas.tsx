@@ -15,7 +15,8 @@ import type {
   Edge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { EntityNode, type EntityNodeCallbacks } from './entity-node'
+import { EntityNode } from './entity-node'
+import type { EntityNodeCallbacks } from './entity-node'
 import { RelationshipEdge } from './relationship-edge'
 import type { Workspace } from '#/lib/schema'
 import { RELATIONSHIP_TYPES } from '#/lib/relationship-types'
