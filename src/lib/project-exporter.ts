@@ -88,7 +88,7 @@ spring.flyway.baseline-on-migrate=true
 spring.flyway.locations=classpath:db/migration
 
 # Entity scanning
-spring.jpa.properties.hibernate.packagesToScan=${options.packageName}
+spring.jpa.properties.hibernate.packagesToScan=${options.packageName}.models
 `
 }
 
@@ -109,10 +109,11 @@ export async function exportProject(
   )
 
   // Entity classes
+  const modelPackage = `${opts.packageName}.models`
   for (const node of workspace.nodes) {
-    const entity = generateJpaEntity(node, workspace.nodes, workspace.edges, opts.packageName)
+    const entity = generateJpaEntity(node, workspace.nodes, workspace.edges, modelPackage)
     zip.file(
-      `src/main/java/${pkgDir}/${entity.className}.java`,
+      `src/main/java/${pkgDir}/models/${entity.className}.java`,
       entity.code,
     )
   }

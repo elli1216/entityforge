@@ -81,13 +81,13 @@ function buildFieldLines(
       lines.push({ content: '    @GeneratedValue(strategy = GenerationType.UUID)', sortKey: sortKey++ })
       lines.push({ content: `    @Column(name = "${colName}", nullable = false, unique = true)`, sortKey: sortKey++ })
     } else {
-      const parts = [`@Column(name = "${colName}"`]
+      const parts: string[] = []
       if (!field.isNullable) parts.push('nullable = false')
       if (field.isUnique) parts.push('unique = true')
       if (info.sqlType === 'VARCHAR(255)') parts.push('length = 255')
-      parts.push(')')
+      const attrs = parts.length > 0 ? `, ${parts.join(', ')}` : ''
       lines.push({ content: '', sortKey: sortKey++ })
-      lines.push({ content: `    ${parts.join(', ')}`, sortKey: sortKey++ })
+      lines.push({ content: `    @Column(name = "${colName}"${attrs})`, sortKey: sortKey++ })
     }
 
     lines.push({ content: `    private ${info.javaType} ${field.name || 'unnamed'};`, sortKey: sortKey++ })
