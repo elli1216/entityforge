@@ -9,6 +9,12 @@ export type GeneratedEntity = {
   code: string
 }
 
+export type GeneratedEnum = {
+  className: string
+  packageName: string
+  code: string
+}
+
 const DEFAULT_PACKAGE = 'com.entityforge.domain'
 
 type Line = { content: string; sortKey: number }
@@ -23,8 +29,8 @@ export function generateJpaEntity(
   const className = toPascalCase(singularize(node.data.tableName))
   const tableName = node.data.tableName
 
-  const imports = collectImports(node, owning, inverse)
-  const fieldLines = buildFieldLines(node, owning, inverse)
+  const imports = collectImports(node, className, owning, inverse, packageName)
+  const fieldLines = buildFieldLines(node, className, owning, inverse)
 
   return {
     className,
@@ -33,10 +39,38 @@ export function generateJpaEntity(
   }
 }
 
+export function generateEnums(
+  node: EntityNode,
+  packageName: string = DEFAULT_PACKAGE,
+): GeneratedEnum[] {
+  const enums: GeneratedEnum[] = []
+  const entityClassName = toPascalCase(singularize(node.data.tableName))
+  const enumPackage = packageName + '.enum'
+
+  for (const field of node.data.fields) {
+    if (field.type !== 'ENUM' || !field.enumValues || field.enumValues.length === 0) continue
+
+    const enumName = entityClassName + toPascalCase(field.name || 'Enum')
+    const values = field.enumValues.map((v) => v.trim()).filter(Boolean)
+    if (values.length === 0) continue
+
+    const code = `package ${enumPackage};
+
+public enum ${enumName} {
+${values.map((v) => `    ${toPascalCase(v)}`).join(',\n')}
+}`
+    enums.push({ className: enumName, packageName: enumPackage, code })
+  }
+
+  return enums
+}
+
 function collectImports(
   node: EntityNode,
+  entityClassName: string,
   owning: RelationshipField[],
   inverse: RelationshipField[],
+  packageName: string,
 ): Set<string> {
   const imports = new Set<string>()
 
@@ -47,11 +81,23 @@ function collectImports(
   imports.add('jakarta.persistence.GenerationType')
   imports.add('jakarta.persistence.Column')
 
+  let hasEnum = false
   for (const field of node.data.fields) {
-    const info = getJavaTypeInfo(field.type)
-    for (const imp of info.imports) {
-      if (!imp.startsWith('java.lang.')) imports.add(imp)
+    if (field.type === 'ENUM' && field.enumValues && field.enumValues.length > 0) {
+      hasEnum = true
+      const enumClassName = entityClassName + toPascalCase(field.name || 'Enum')
+      imports.add(`${packageName}.enum.${enumClassName}`)
+    } else {
+      const info = getJavaTypeInfo(field.type)
+      for (const imp of info.imports) {
+        if (!imp.startsWith('java.lang.')) imports.add(imp)
+      }
     }
+  }
+
+  if (hasEnum) {
+    imports.add('jakarta.persistence.Enumerated')
+    imports.add('jakarta.persistence.EnumType')
   }
 
   for (const rel of [...owning, ...inverse]) {
@@ -65,6 +111,7 @@ function collectImports(
 
 function buildFieldLines(
   node: EntityNode,
+  entityClassName: string,
   owning: RelationshipField[],
   inverse: RelationshipField[],
 ): Line[] {
@@ -72,8 +119,18 @@ function buildFieldLines(
   let sortKey = 0
 
   for (const field of node.data.fields) {
-    const info = getJavaTypeInfo(field.type)
     const colName = field.name || field.id
+
+    if (field.type === 'ENUM' && field.enumValues && field.enumValues.length > 0) {
+      const enumClass = entityClassName + toPascalCase(field.name || 'Enum')
+      lines.push({ content: '', sortKey: sortKey++ })
+      lines.push({ content: `    @Enumerated(EnumType.STRING)`, sortKey: sortKey++ })
+      lines.push({ content: `    @Column(name = "${colName}")`, sortKey: sortKey++ })
+      lines.push({ content: `    private ${enumClass} ${field.name || 'unnamed'};`, sortKey: sortKey++ })
+      continue
+    }
+
+    const info = getJavaTypeInfo(field.type)
 
     if (field.isPrimaryKey) {
       lines.push({ content: '', sortKey: sortKey++ })

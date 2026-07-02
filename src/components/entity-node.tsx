@@ -11,7 +11,7 @@ export type EntityNodeCallbacks = {
   onCloneNode: (nodeId: string) => void
 }
 
-const STRING_TYPES = new Set(['VARCHAR', 'ENUM', 'CHAR'])
+const STRING_TYPES = new Set(['VARCHAR', 'CHAR'])
 const DECIMAL_TYPES = new Set(['DECIMAL', 'NUMERIC'])
 
 function Badge({
@@ -62,21 +62,43 @@ function FieldRow({
   const [lengthVal, setLengthVal] = useState(String(field.length ?? ''))
   const [precisionVal, setPrecisionVal] = useState(String(field.precision ?? ''))
   const [scaleVal, setScaleVal] = useState(String(field.scale ?? ''))
+  const [enumValuesStr, setEnumValuesStr] = useState((field.enumValues ?? []).join(', '))
+  const enumValuesRef = useRef(enumValuesStr)
+  if (enumValuesStr !== enumValuesRef.current) {
+    enumValuesRef.current = enumValuesStr
+  }
 
   const flush = useCallback(() => {
     const updates: Partial<Field> = { name, type }
-    if (STRING_TYPES.has(type)) {
-      const n = lengthVal === '' ? undefined : Number(lengthVal)
-      updates.length = (n && n > 0) ? n : undefined
-    }
-    if (DECIMAL_TYPES.has(type)) {
-      const p = precisionVal === '' ? undefined : Number(precisionVal)
-      const s = scaleVal === '' ? undefined : Number(scaleVal)
-      updates.precision = (p && p > 0) ? p : undefined
-      updates.scale = (s != null && s >= 0) ? s : undefined
+    if (type === 'ENUM') {
+      updates.length = undefined
+      updates.precision = undefined
+      updates.scale = undefined
+      const values = enumValuesStr.split(',').map((v) => v.trim()).filter(Boolean)
+      updates.enumValues = values.length > 0 ? values : undefined
+    } else {
+      updates.enumValues = undefined
+      if (STRING_TYPES.has(type)) {
+        const n = lengthVal === '' ? undefined : Number(lengthVal)
+        updates.length = (n && n > 0) ? n : undefined
+        updates.precision = undefined
+        updates.scale = undefined
+      }
+      if (DECIMAL_TYPES.has(type)) {
+        updates.length = undefined
+        const p = precisionVal === '' ? undefined : Number(precisionVal)
+        const s = scaleVal === '' ? undefined : Number(scaleVal)
+        updates.precision = (p && p > 0) ? p : undefined
+        updates.scale = (s != null && s >= 0) ? s : undefined
+      }
+      if (!STRING_TYPES.has(type) && !DECIMAL_TYPES.has(type)) {
+        updates.length = undefined
+        updates.precision = undefined
+        updates.scale = undefined
+      }
     }
     onChange(field.id, updates)
-  }, [field.id, name, type, lengthVal, precisionVal, scaleVal, onChange])
+  }, [field.id, name, type, lengthVal, precisionVal, scaleVal, enumValuesStr, onChange])
 
   const isString = STRING_TYPES.has(type)
   const isDecimal = DECIMAL_TYPES.has(type)
@@ -159,6 +181,23 @@ function FieldRow({
           />
           )
         </span>
+      )}
+
+      {type === 'ENUM' && (
+        <input
+          className="min-w-0 flex-1 rounded px-1 py-0.5 text-[10px] outline-none"
+          placeholder="ACTIVE, INACTIVE, PENDING"
+          value={enumValuesStr}
+          onChange={(e) => setEnumValuesStr(e.target.value)}
+          onBlur={flush}
+          title="Comma-separated enum values"
+          style={{
+            backgroundColor: 'var(--chip-bg)',
+            borderColor: 'var(--chip-line)',
+            color: 'var(--java-muted)',
+            border: '1px solid',
+          }}
+        />
       )}
 
       <div className="flex items-center gap-0.5">
@@ -272,6 +311,7 @@ export function EntityNode({
         length: undefined,
         precision: undefined,
         scale: undefined,
+        enumValues: undefined,
       }
       onUpdateNode(id, { fields: [...fields, newField] })
     },

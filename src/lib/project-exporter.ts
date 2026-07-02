@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import type { Workspace } from './schema'
 import { generateDdl } from './ddl-generator'
-import { generateJpaEntity } from './jpa-generator'
+import { generateJpaEntity, generateEnums } from './jpa-generator'
 
 export type ProdDb = 'postgresql' | 'mysql'
 
@@ -262,7 +262,7 @@ export async function exportProject(
     generateProdProperties(opts),
   )
 
-  // Entity classes
+  // Entity + enum classes
   const modelPackage = `${opts.packageName}.models`
   for (const node of workspace.nodes) {
     const entity = generateJpaEntity(
@@ -275,6 +275,13 @@ export async function exportProject(
       `src/main/java/${pkgDir}/models/${entity.className}.java`,
       entity.code,
     )
+    const enums = generateEnums(node, modelPackage)
+    for (const en of enums) {
+      zip.file(
+        `src/main/java/${pkgDir}/models/enum/${en.className}.java`,
+        en.code,
+      )
+    }
   }
 
   // Flyway migration

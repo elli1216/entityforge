@@ -4,7 +4,7 @@ import java from 'highlight.js/lib/languages/java'
 import sql from 'highlight.js/lib/languages/sql'
 import json from 'highlight.js/lib/languages/json'
 import type { Workspace } from '#/lib/schema'
-import { generateJpaEntity } from '#/lib/jpa-generator'
+import { generateJpaEntity, generateEnums } from '#/lib/jpa-generator'
 import { generateDdl } from '#/lib/ddl-generator'
 import { handleError } from '#/lib/error-handler'
 
@@ -39,6 +39,10 @@ export function CodeViewer({ workspace }: Props) {
     for (const node of workspace.nodes) {
       const entity = generateJpaEntity(node, workspace.nodes, workspace.edges)
       result.push({ id: entity.className, label: `${entity.className}.java`, code: entity.code, lang: 'java' })
+      const enums = generateEnums(node)
+      for (const en of enums) {
+        result.push({ id: en.className, label: `${en.className}.java`, code: en.code, lang: 'java' })
+      }
     }
 
     if (workspace.nodes.length > 0) {
