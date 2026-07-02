@@ -12,6 +12,7 @@ export const FieldSchema = z.object({
   precision: z.number().positive().optional(),
   scale: z.number().nonnegative().optional(),
   enumValues: z.array(z.string()).optional(),
+  defaultValue: z.string().optional(),
 })
 
 export const EntityNodeSchema = z.object({

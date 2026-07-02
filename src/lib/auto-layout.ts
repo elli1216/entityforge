@@ -14,7 +14,7 @@ export function autoLayout(workspace: Workspace): Workspace {
 
   for (const node of workspace.nodes) {
     const h = estimateNodeHeight(node.data.fields.length)
-    g.setNode(node.id, { width: 460, height: h })
+    g.setNode(node.id, { width: 560, height: h })
   }
 
   for (const edge of workspace.edges) {

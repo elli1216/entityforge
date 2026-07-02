@@ -82,7 +82,9 @@ function collectImports(
   imports.add('jakarta.persistence.Column')
 
   let hasEnum = false
+  let hasDefault = false
   for (const field of node.data.fields) {
+    if (field.defaultValue) hasDefault = true
     if (field.type === 'ENUM' && field.enumValues && field.enumValues.length > 0) {
       hasEnum = true
       const enumClassName = entityClassName + toPascalCase(field.name || 'Enum')
@@ -98,6 +100,10 @@ function collectImports(
   if (hasEnum) {
     imports.add('jakarta.persistence.Enumerated')
     imports.add('jakarta.persistence.EnumType')
+  }
+
+  if (hasDefault) {
+    imports.add('org.hibernate.annotations.ColumnDefault')
   }
 
   for (const rel of [...owning, ...inverse]) {
@@ -124,6 +130,9 @@ function buildFieldLines(
     if (field.type === 'ENUM' && field.enumValues && field.enumValues.length > 0) {
       const enumClass = entityClassName + toPascalCase(field.name || 'Enum')
       lines.push({ content: '', sortKey: sortKey++ })
+      if (field.defaultValue) {
+        lines.push({ content: `    @ColumnDefault("${field.defaultValue}")`, sortKey: sortKey++ })
+      }
       lines.push({ content: `    @Enumerated(EnumType.STRING)`, sortKey: sortKey++ })
       lines.push({ content: `    @Column(name = "${colName}")`, sortKey: sortKey++ })
       lines.push({ content: `    private ${enumClass} ${field.name || 'unnamed'};`, sortKey: sortKey++ })
@@ -152,6 +161,9 @@ function buildFieldLines(
       }
       const attrs = parts.length > 0 ? `, ${parts.join(', ')}` : ''
       lines.push({ content: '', sortKey: sortKey++ })
+      if (field.defaultValue) {
+        lines.push({ content: `    @ColumnDefault("${field.defaultValue}")`, sortKey: sortKey++ })
+      }
       lines.push({ content: `    @Column(name = "${colName}"${attrs})`, sortKey: sortKey++ })
     }
 

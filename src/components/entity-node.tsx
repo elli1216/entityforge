@@ -4,6 +4,7 @@ import type { NodeProps } from '@xyflow/react'
 import { FIELD_TYPES } from '../lib/field-types'
 import type { Field, EntityNodeData } from '#/lib/schema'
 import { Copy, X } from 'lucide-react'
+import HoverContent from './hover-content'
 
 export type EntityNodeCallbacks = {
   onUpdateNode: (nodeId: string, data: Partial<EntityNodeData>) => void
@@ -67,6 +68,11 @@ function FieldRow({
   if (enumValuesStr !== enumValuesRef.current) {
     enumValuesRef.current = enumValuesStr
   }
+  const [defaultValue, setDefaultValue] = useState(field.defaultValue ?? '')
+  const defaultRef = useRef(defaultValue)
+  if (defaultValue !== defaultRef.current) {
+    defaultRef.current = defaultValue
+  }
 
   const flush = useCallback(() => {
     const updates: Partial<Field> = { name, type }
@@ -91,14 +97,15 @@ function FieldRow({
         updates.precision = (p && p > 0) ? p : undefined
         updates.scale = (s != null && s >= 0) ? s : undefined
       }
-      if (!STRING_TYPES.has(type) && !DECIMAL_TYPES.has(type)) {
+      if (!STRING_TYPES.has(type) && !DECIMAL_TYPES.has(type) && type !== 'ENUM') {
         updates.length = undefined
         updates.precision = undefined
         updates.scale = undefined
       }
     }
+    updates.defaultValue = defaultValue || undefined
     onChange(field.id, updates)
-  }, [field.id, name, type, lengthVal, precisionVal, scaleVal, enumValuesStr, onChange])
+  }, [field.id, name, type, lengthVal, precisionVal, scaleVal, enumValuesStr, defaultValue, onChange])
 
   const isString = STRING_TYPES.has(type)
   const isDecimal = DECIMAL_TYPES.has(type)
@@ -118,6 +125,7 @@ function FieldRow({
         value={type}
         onChange={(e) => { setType(e.target.value); setLengthVal(''); setPrecisionVal(''); setScaleVal('') }}
         onBlur={flush}
+        title='Variable Type'
         style={{
           backgroundColor: 'var(--chip-bg)',
           borderColor: 'var(--chip-line)',
@@ -200,25 +208,50 @@ function FieldRow({
         />
       )}
 
+      {type !== 'ENUM' && type !== 'BOOLEAN' && (
+        <input
+          className="w-16 rounded px-1 py-0.5 text-[10px] outline-none"
+          placeholder="DEFAULT"
+          value={defaultValue}
+          onChange={(e) => setDefaultValue(e.target.value)}
+          onBlur={flush}
+          title="Default value (raw SQL fragment after DEFAULT)"
+          style={{
+            backgroundColor: 'var(--chip-bg)',
+            borderColor: 'var(--chip-line)',
+            color: 'var(--java-muted)',
+            border: '1px solid',
+          }}
+        />
+      )}
+
       <div className="flex items-center gap-0.5">
-        <Badge
-          label="PK"
-          active={field.isPrimaryKey}
-          activeColor="var(--java-orange)"
-          onClick={() => onChange(field.id, { isPrimaryKey: !field.isPrimaryKey })}
-        />
-        <Badge
-          label="NL"
-          active={!field.isNullable}
-          activeColor="var(--java-blue)"
-          onClick={() => onChange(field.id, { isNullable: !field.isNullable })}
-        />
-        <Badge
-          label="UN"
-          active={field.isUnique}
-          activeColor="var(--java-orange-glow)"
-          onClick={() => onChange(field.id, { isUnique: !field.isUnique })}
-        />
+        <HoverContent content='Primary Key'>
+          <Badge
+            label="PK"
+            active={field.isPrimaryKey}
+            activeColor="var(--java-orange)"
+            onClick={() => onChange(field.id, { isPrimaryKey: !field.isPrimaryKey })}
+          />
+        </HoverContent>
+
+        <HoverContent content='Nullable'>
+          <Badge
+            label="NL"
+            active={!field.isNullable}
+            activeColor="var(--java-blue)"
+            onClick={() => onChange(field.id, { isNullable: !field.isNullable })}
+          />
+        </HoverContent>
+
+        <HoverContent content='Unique'>
+          <Badge
+            label="UN"
+            active={field.isUnique}
+            activeColor="var(--java-orange-glow)"
+            onClick={() => onChange(field.id, { isUnique: !field.isUnique })}
+          />
+        </HoverContent>
       </div>
 
       <div className="flex items-center gap-0.5">
@@ -312,6 +345,7 @@ export function EntityNode({
         precision: undefined,
         scale: undefined,
         enumValues: undefined,
+        defaultValue: undefined,
       }
       onUpdateNode(id, { fields: [...fields, newField] })
     },
