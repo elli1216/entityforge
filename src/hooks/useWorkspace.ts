@@ -4,8 +4,8 @@ import { Route } from '#/routes/workspace'
 import { WorkspaceSchema } from '#/lib/schema'
 import type { Workspace, Field } from '#/lib/schema'
 
-
 const STORAGE_KEY = 'current_draft'
+const MAX_HISTORY = 50
 
 function parseWorkspace(draft: string | undefined): Workspace {
   if (draft) {
@@ -31,6 +31,10 @@ export function useWorkspace() {
   workspaceRef.current = workspace
 
   const persistTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const past = useRef<Workspace[]>([])
+  const future = useRef<Workspace[]>([])
+  const [, setHistoryTick] = useState(0)
+  const bump = useCallback(() => setHistoryTick((n) => n + 1), [])
 
   const persist = useCallback(
     (ws: Workspace) => {
@@ -57,12 +61,38 @@ export function useWorkspace() {
     (next: Workspace | ((prev: Workspace) => Workspace)) => {
       setWorkspace((prev) => {
         const nextWs = typeof next === 'function' ? next(prev) : next
+        past.current.push(prev)
+        if (past.current.length > MAX_HISTORY) past.current.shift()
+        future.current = []
+        bump()
         persist(nextWs)
         return nextWs
       })
     },
     [persist],
   )
+
+  const undo = useCallback(() => {
+    const prev = past.current.pop()
+    if (!prev) return
+    bump()
+    setWorkspace((current) => {
+      future.current.push(current)
+      persist(prev)
+      return prev
+    })
+  }, [persist, bump])
+
+  const redo = useCallback(() => {
+    const next = future.current.pop()
+    if (!next) return
+    bump()
+    setWorkspace((current) => {
+      past.current.push(current)
+      persist(next)
+      return next
+    })
+  }, [persist, bump])
 
   const addEntity = useCallback(() => {
     updateWorkspace((prev) => {
@@ -108,5 +138,17 @@ export function useWorkspace() {
     updateWorkspace({ nodes: [], edges: [] })
   }, [updateWorkspace])
 
-  return { workspace, updateWorkspace, addEntity, resetWorkspace }
+  const canUndo = past.current.length > 0
+  const canRedo = future.current.length > 0
+
+  return {
+    workspace,
+    updateWorkspace,
+    addEntity,
+    resetWorkspace,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  }
 }
