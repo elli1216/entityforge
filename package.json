@@ -16,6 +16,7 @@
     "check": "prettier --check ."
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@faker-js/faker": "^10.3.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/match-sorter-utils": "latest",
@@ -28,6 +29,7 @@
     "@tanstack/react-start": "latest",
     "@tanstack/react-table": "latest",
     "@tanstack/router-plugin": "^1.132.0",
+    "@types/dagre": "^0.7.54",
     "@xyflow/react": "^12.11.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
