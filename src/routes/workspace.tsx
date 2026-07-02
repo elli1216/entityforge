@@ -19,7 +19,7 @@ export const Route = createFileRoute('/workspace')({
 })
 
 function WorkspacePage() {
-  const { workspace, updateWorkspace, addEntity, resetWorkspace, undo, redo, canUndo, canRedo } = useWorkspace()
+  const { workspace, updateWorkspace, addEntity, resetWorkspace, undo, redo, canUndo, canRedo, cloneEntity } = useWorkspace()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
@@ -89,7 +89,7 @@ function WorkspacePage() {
         ) : (
           <div className="flex flex-1">
             <div className="flex-1">
-              <Canvas workspace={workspace} updateWorkspace={updateWorkspace} />
+              <Canvas workspace={workspace} updateWorkspace={updateWorkspace} onCloneNode={cloneEntity} />
             </div>
             <div
               className="overflow-hidden transition-all duration-200 ease-in-out"

@@ -77,6 +77,7 @@ function ZoomControls() {
 type Props = {
   workspace: Workspace
   updateWorkspace: (next: Workspace | ((prev: Workspace) => Workspace)) => void
+  onCloneNode: EntityNodeCallbacks['onCloneNode']
 }
 
 const defaultEdgeOptions = {
@@ -84,7 +85,7 @@ const defaultEdgeOptions = {
   labelStyle: { fill: 'var(--java-muted)', fontSize: 10 },
 }
 
-export function Canvas({ workspace, updateWorkspace }: Props) {
+export function Canvas({ workspace, updateWorkspace, onCloneNode }: Props) {
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       updateWorkspace((prev) => {
@@ -156,6 +157,7 @@ export function Canvas({ workspace, updateWorkspace }: Props) {
       ...n.data,
       onUpdateNode: handleUpdateNode,
       onDeleteNode: handleDeleteNode,
+      onCloneNode,
     },
   }))
 

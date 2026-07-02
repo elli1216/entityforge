@@ -3,10 +3,12 @@ import { Handle, Position } from '@xyflow/react'
 import type { NodeProps } from '@xyflow/react'
 import { FIELD_TYPES } from '../lib/field-types'
 import type { Field, EntityNodeData } from '#/lib/schema'
+import { Copy, X } from 'lucide-react'
 
 export type EntityNodeCallbacks = {
   onUpdateNode: (nodeId: string, data: Partial<EntityNodeData>) => void
   onDeleteNode: (nodeId: string) => void
+  onCloneNode: (nodeId: string) => void
 }
 
 const STRING_TYPES = new Set(['VARCHAR', 'ENUM', 'CHAR'])
@@ -40,12 +42,20 @@ function Badge({
 
 function FieldRow({
   field,
+  index,
+  total,
   onChange,
   onDelete,
+  onMoveUp,
+  onMoveDown,
 }: {
   field: Field
+  index: number
+  total: number
   onChange: (id: string, updates: Partial<Field>) => void
   onDelete: (id: string) => void
+  onMoveUp: (index: number) => void
+  onMoveDown: (index: number) => void
 }) {
   const [name, setName] = useState(field.name)
   const [type, setType] = useState(field.type)
@@ -172,14 +182,34 @@ function FieldRow({
         />
       </div>
 
-      <button
-        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs transition-opacity hover:opacity-100"
-        onClick={(e) => { e.stopPropagation(); onDelete(field.id) }}
-        style={{ color: 'var(--java-muted)', opacity: 0.4 }}
-        title="Delete field"
-      >
-        ×
-      </button>
+      <div className="flex items-center gap-0.5">
+        <button
+          className="flex h-5 w-4 cursor-pointer items-center justify-center rounded text-[10px] transition-opacity disabled:opacity-20 hover:opacity-100"
+          onClick={(e) => { e.stopPropagation(); onMoveUp(index) }}
+          disabled={index === 0}
+          style={{ color: 'var(--java-muted)', opacity: index === 0 ? 0.2 : 0.4 }}
+          title="Move up"
+        >
+          ▲
+        </button>
+        <button
+          className="flex h-5 w-4 cursor-pointer items-center justify-center rounded text-[10px] transition-opacity disabled:opacity-20 hover:opacity-100"
+          onClick={(e) => { e.stopPropagation(); onMoveDown(index) }}
+          disabled={index === total - 1}
+          style={{ color: 'var(--java-muted)', opacity: index === total - 1 ? 0.2 : 0.4 }}
+          title="Move down"
+        >
+          ▼
+        </button>
+        <button
+          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs transition-opacity hover:opacity-100"
+          onClick={(e) => { e.stopPropagation(); onDelete(field.id) }}
+          style={{ color: 'var(--java-muted)', opacity: 0.4 }}
+          title="Delete field"
+        >
+          ×
+        </button>
+      </div>
     </div>
   )
 }
@@ -191,7 +221,7 @@ export function EntityNode({
 }: NodeProps & {
   data: EntityNodeData & EntityNodeCallbacks
 }) {
-  const { tableName, fields, onUpdateNode, onDeleteNode } = data
+  const { tableName, fields, onUpdateNode, onDeleteNode, onCloneNode } = data
   const [localTableName, setLocalTableName] = useState(tableName)
   const tableRef = useRef(tableName)
 
@@ -256,6 +286,25 @@ export function EntityNode({
     [id, onDeleteNode],
   )
 
+  const handleClone = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onCloneNode(id)
+    },
+    [id, onCloneNode],
+  )
+
+  const handleMoveField = useCallback(
+    (fieldIndex: number, direction: -1 | 1) => {
+      const target = fieldIndex + direction
+      if (target < 0 || target >= fields.length) return
+      const newFields = [...fields]
+        ;[newFields[fieldIndex], newFields[target]] = [newFields[target], newFields[fieldIndex]]
+      onUpdateNode(id, { fields: newFields })
+    },
+    [id, fields, onUpdateNode],
+  )
+
   return (
     <div
       className="min-w-56 rounded-xl border-2 shadow-lg transition-shadow"
@@ -288,20 +337,31 @@ export function EntityNode({
         />
         <button
           className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs text-white/60 transition-colors hover:text-white"
+          onClick={handleClone}
+          title="Clone entity"
+        >
+          <Copy className='size-4' />
+        </button>
+        <button
+          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs text-white/60 transition-colors hover:text-white"
           onClick={handleDelete}
           title="Delete entity"
         >
-          ×
+          <X className='size-3' />
         </button>
       </div>
 
       <div className="max-h-56 overflow-y-auto">
-        {fields.map((field) => (
+        {fields.map((field, i) => (
           <FieldRow
             key={field.id}
             field={field}
+            index={i}
+            total={fields.length}
             onChange={handleFieldChange}
             onDelete={handleDeleteField}
+            onMoveUp={(idx) => handleMoveField(idx, -1)}
+            onMoveDown={(idx) => handleMoveField(idx, 1)}
           />
         ))}
       </div>

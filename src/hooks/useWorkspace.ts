@@ -134,6 +134,24 @@ export function useWorkspace() {
     }
   }, [draft, navigate])
 
+  const cloneEntity = useCallback((nodeId: string) => {
+    updateWorkspace((prev) => {
+      const source = prev.nodes.find((n) => n.id === nodeId)
+      if (!source) return prev
+      const cloned = {
+        ...source,
+        id: crypto.randomUUID(),
+        position: { x: source.position.x + 30, y: source.position.y + 30 },
+        data: {
+          ...source.data,
+          tableName: source.data.tableName ? `${source.data.tableName} (copy)` : '',
+          fields: source.data.fields.map((f) => ({ ...f, id: crypto.randomUUID() })),
+        },
+      }
+      return { ...prev, nodes: [...prev.nodes, cloned] }
+    })
+  }, [updateWorkspace])
+
   const resetWorkspace = useCallback(() => {
     updateWorkspace({ nodes: [], edges: [] })
   }, [updateWorkspace])
@@ -145,6 +163,7 @@ export function useWorkspace() {
     workspace,
     updateWorkspace,
     addEntity,
+    cloneEntity,
     resetWorkspace,
     undo,
     redo,
