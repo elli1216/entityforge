@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Handle, Position } from '@xyflow/react'
 import type { NodeProps } from '@xyflow/react'
 import { FIELD_TYPES } from '../lib/field-types'
-import type { Field, EntityNodeData } from '#/lib/schema'
+import type { Field, EntityNodeData, IndexConfig } from '#/lib/schema'
 import { Copy, X } from 'lucide-react'
 import HoverContent from './hover-content'
 
@@ -286,6 +286,73 @@ function FieldRow({
   )
 }
 
+function IndexRow({
+  idx,
+  onChange,
+  onDelete,
+}: {
+  idx: IndexConfig
+  onChange: (id: string, updates: Partial<IndexConfig>) => void
+  onDelete: (id: string) => void
+}) {
+  const [name, setName] = useState(idx.name)
+  const [columnsStr, setColumnsStr] = useState(idx.columns.join(', '))
+  
+  const nameRef = useRef(name)
+  if (idx.name !== nameRef.current) {
+    nameRef.current = idx.name
+    setName(idx.name)
+  }
+  const colsRef = useRef(columnsStr)
+  const incomingColsStr = idx.columns.join(', ')
+  if (incomingColsStr !== colsRef.current) {
+    colsRef.current = incomingColsStr
+    setColumnsStr(incomingColsStr)
+  }
+
+  const flush = useCallback(() => {
+    const cols = columnsStr.split(',').map(c => c.trim()).filter(Boolean)
+    onChange(idx.id, { name, columns: cols })
+  }, [idx.id, name, columnsStr, onChange])
+
+  return (
+    <div className="group flex flex-wrap items-center gap-1 border-b px-2 py-1.5 text-sm" style={{ borderColor: 'var(--line)' }}>
+      <input
+        className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-[10px] outline-none font-mono"
+        placeholder="idx_name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onBlur={flush}
+        style={{ color: 'var(--java-dark)' }}
+      />
+      <input
+        className="min-w-0 flex-1 px-1 py-0.5 text-[10px] outline-none font-mono"
+        placeholder="col1, col2"
+        value={columnsStr}
+        onChange={(e) => setColumnsStr(e.target.value)}
+        onBlur={flush}
+        style={{ color: 'var(--java-muted)', border: '1px solid var(--chip-line)', backgroundColor: 'var(--chip-bg)', borderRadius: '4px' }}
+      />
+      <HoverContent content='Unique'>
+        <Badge
+          label="UN"
+          active={idx.isUnique}
+          activeColor="var(--java-orange-glow)"
+          onClick={() => onChange(idx.id, { isUnique: !idx.isUnique })}
+        />
+      </HoverContent>
+      <button
+        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs transition-opacity hover:opacity-100"
+        onClick={(e) => { e.stopPropagation(); onDelete(idx.id) }}
+        style={{ color: 'var(--java-muted)', opacity: 0.4 }}
+        title="Delete index"
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
 export function EntityNode({
   id,
   data,
@@ -293,7 +360,7 @@ export function EntityNode({
 }: NodeProps & {
   data: EntityNodeData & EntityNodeCallbacks
 }) {
-  const { tableName, fields, onUpdateNode, onDeleteNode, onCloneNode } = data
+  const { tableName, fields, indexes = [], onUpdateNode, onDeleteNode, onCloneNode } = data
   const [localTableName, setLocalTableName] = useState(tableName)
   const tableRef = useRef(tableName)
 
@@ -379,6 +446,38 @@ export function EntityNode({
     [id, fields, onUpdateNode],
   )
 
+  const handleIndexChange = useCallback(
+    (idxId: string, updates: Partial<IndexConfig>) => {
+      const newIndexes = indexes.map((i) =>
+        i.id === idxId ? { ...i, ...updates } : i,
+      )
+      onUpdateNode(id, { indexes: newIndexes })
+    },
+    [id, indexes, onUpdateNode],
+  )
+
+  const handleDeleteIndex = useCallback(
+    (idxId: string) => {
+      const newIndexes = indexes.filter((i) => i.id !== idxId)
+      onUpdateNode(id, { indexes: newIndexes })
+    },
+    [id, indexes, onUpdateNode],
+  )
+
+  const handleAddIndex = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      const newIndex: IndexConfig = {
+        id: crypto.randomUUID(),
+        name: `idx_${tableName.toLowerCase()}`,
+        columns: [],
+        isUnique: false,
+      }
+      onUpdateNode(id, { indexes: [...indexes, newIndex] })
+    },
+    [id, tableName, indexes, onUpdateNode],
+  )
+
   return (
     <div
       className="min-w-56 rounded-xl border-2 shadow-lg transition-shadow"
@@ -440,18 +539,47 @@ export function EntityNode({
         ))}
       </div>
 
-      <button
-        className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-b-xl px-3 py-2 text-xs font-semibold transition-colors"
-        onClick={handleAddField}
-        style={{
-          color: 'var(--java-muted)',
-          borderTop: '1px solid var(--line)',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(237, 139, 0, 0.08)'; e.currentTarget.style.color = 'var(--java-orange)' }}
-        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--java-muted)' }}
-      >
-        + Add Field
-      </button>
+      {indexes.length > 0 && (
+        <div className="border-t" style={{ borderColor: 'var(--line)' }}>
+          <div className="px-2 py-1 text-[10px] font-semibold uppercase text-gray-500">Indexes</div>
+          <div className="max-h-32 overflow-y-auto">
+            {indexes.map((idx) => (
+              <IndexRow
+                key={idx.id}
+                idx={idx}
+                onChange={handleIndexChange}
+                onDelete={handleDeleteIndex}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex" style={{ borderTop: '1px solid var(--line)' }}>
+        <button
+          className="flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-bl-xl px-3 py-2 text-xs font-semibold transition-colors"
+          onClick={handleAddField}
+          style={{
+            color: 'var(--java-muted)',
+            borderRight: '1px solid var(--line)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(237, 139, 0, 0.08)'; e.currentTarget.style.color = 'var(--java-orange)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--java-muted)' }}
+        >
+          + Field
+        </button>
+        <button
+          className="flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-br-xl px-3 py-2 text-xs font-semibold transition-colors"
+          onClick={handleAddIndex}
+          style={{
+            color: 'var(--java-muted)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(237, 139, 0, 0.08)'; e.currentTarget.style.color = 'var(--java-orange)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--java-muted)' }}
+        >
+          + Index
+        </button>
+      </div>
 
       <Handle
         type="source"

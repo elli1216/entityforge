@@ -15,13 +15,28 @@ export function generateDdl(
   const createTables = nodes
     .map((node) => generateCreateTable(node))
     .join('\n\n')
+  const indexes = generateIndexes(nodes)
   const foreignKeys = generateForeignKeys(nodes, edges)
-  const content = [createTables, foreignKeys].filter(Boolean).join('\n\n')
+  const content = [createTables, indexes, foreignKeys].filter(Boolean).join('\n\n')
 
   return {
     migrationName: `V${version}__create_initial_schema`,
     sql: content,
   }
+}
+
+function generateIndexes(nodes: EntityNode[]): string {
+  const statements: string[] = []
+  for (const node of nodes) {
+    if (!node.data.indexes) continue
+    for (const idx of node.data.indexes) {
+      if (idx.columns.length === 0) continue
+      const uniqueStr = idx.isUnique ? 'UNIQUE ' : ''
+      const cols = idx.columns.join(', ')
+      statements.push(`CREATE ${uniqueStr}INDEX ${idx.name} ON ${node.data.tableName} (${cols});`)
+    }
+  }
+  return statements.join('\n')
 }
 
 function generateCreateTable(node: EntityNode): string {

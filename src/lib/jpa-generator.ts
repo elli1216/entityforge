@@ -35,7 +35,7 @@ export function generateJpaEntity(
   return {
     className,
     packageName,
-    code: generateClass(packageName, imports, className, tableName, fieldLines),
+    code: generateClass(packageName, imports, className, tableName, fieldLines, node.data.indexes || []),
   }
 }
 
@@ -110,6 +110,10 @@ function collectImports(
     for (const imp of rel.imports) {
       imports.add(imp)
     }
+  }
+
+  if (node.data.indexes && node.data.indexes.length > 0) {
+    imports.add('jakarta.persistence.Index')
   }
 
   return imports
@@ -191,6 +195,7 @@ function generateClass(
   className: string,
   tableName: string,
   fieldLines: Line[],
+  indexes: { name: string; columns: string[]; isUnique: boolean }[],
 ): string {
   const sortedImports = [...imports].sort()
   const importBlock = sortedImports.length > 0 ? '\n' + sortedImports.map((i) => `import ${i};`).join('\n') : ''
@@ -199,10 +204,23 @@ function generateClass(
 
   const gettersSetters = buildGetterSetters(fieldLines)
 
+  let tableAnnotation = `@Table(name = "${tableName}")`
+  const validIndexes = indexes.filter(idx => idx.columns.length > 0)
+  if (validIndexes.length > 0) {
+    const idxStrings = validIndexes.map(idx => {
+      const cols = idx.columns.join(', ')
+      const unique = idx.isUnique ? ', unique = true' : ''
+      return `@Index(name = "${idx.name}", columnList = "${cols}"${unique})`
+    })
+    tableAnnotation = `@Table(name = "${tableName}", indexes = {
+    ${idxStrings.join(',\n    ')}
+})`
+  }
+
   return `package ${packageName};${importBlock}
 
 @Entity
-@Table(name = "${tableName}")
+${tableAnnotation}
 public class ${className} {
 ${fieldsCode}
 

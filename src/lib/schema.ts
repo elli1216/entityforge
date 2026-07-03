@@ -15,6 +15,14 @@ export const FieldSchema = z.object({
   defaultValue: z.string().optional(),
 })
 
+export const IndexSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  columns: z.array(z.string()),
+  isUnique: z.boolean().default(false),
+})
+export type IndexConfig = z.infer<typeof IndexSchema>
+
 export const EntityNodeSchema = z.object({
   id: z.string(),
   type: z.literal('entity').default('entity'),
@@ -22,6 +30,7 @@ export const EntityNodeSchema = z.object({
   data: z.object({
     tableName: z.string(),
     fields: z.array(FieldSchema),
+    indexes: z.array(IndexSchema).default([]),
   }),
 })
 
