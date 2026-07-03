@@ -1,33 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ThemeToggle } from '#/components/theme-toggle'
+import { ArrowRight } from 'lucide-react'
+import { Header } from '#/components/header'
 
 export const Route = createFileRoute('/')({ component: Home })
 
 function Home() {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="island-shell sticky top-0 z-50 flex items-center justify-between border-b px-6 py-3">
-        <div className="flex items-center gap-2">
-          <img className='size-10' src="/header-logo.png" alt="logo/" />
-          <span className="hidden md:block text-xl font-bold" style={{ color: 'var(--java-orange)' }}>
-            EntityForge
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            to="/workspace"
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors"
-            style={{
-              backgroundColor: 'var(--java-orange)',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--java-orange-deep)')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--java-orange)')}
-          >
-            Open Workspace
-          </Link>
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header />
 
       <main className="flex-1">
         <section className="page-wrap py-24 md:py-32">
@@ -49,13 +29,14 @@ function Home() {
               export production-ready Java code and Flyway migrations — all in your
               browser, zero setup required.
             </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4">
+            <div className="mt-10 flex flex-row items-center justify-center gap-4">
               <Link
                 to="/workspace"
                 className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5"
                 style={{
                   backgroundColor: 'var(--java-orange)',
                   boxShadow: '0 4px 20px rgba(237, 139, 0, 0.35)',
+                  color: 'var(--java-blue-deep)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'var(--java-orange-deep)'
@@ -67,9 +48,27 @@ function Home() {
                 }}
               >
                 Start Building
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                <ArrowRight className='size-4' />
+              </Link>
+              <Link
+                to="/documentation"
+                className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-base font-semibold shadow-lg transition-all hover:-translate-y-0.5"
+                style={{
+                  backgroundColor: 'var(--java-blue)',
+                  boxShadow: '0 4px 20px rgba(237, 139, 0, 0.35)',
+                  color: 'var(--java-orange-deep)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--java-blue-deep)'
+                  e.currentTarget.style.boxShadow = '0 6px 28px rgba(237, 139, 0, 0.45)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--java-blue)'
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(237, 139, 0, 0.35)'
+                }}
+              >
+                Documentation
+                <ArrowRight className='size-4' />
               </Link>
             </div>
           </div>
