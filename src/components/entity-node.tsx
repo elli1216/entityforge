@@ -1,9 +1,10 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Handle, Position } from '@xyflow/react'
 import type { NodeProps } from '@xyflow/react'
 import { FIELD_TYPES } from '../lib/field-types'
 import type { Field, EntityNodeData, IndexConfig } from '#/lib/schema'
-import { Copy, X } from 'lucide-react'
+import { toPascalCase, singularize } from '#/lib/java-types'
+import { Copy, X, Key, ChevronUp, ChevronDown, Plus, Layers, Database } from 'lucide-react'
 import HoverContent from './hover-content'
 
 export type EntityNodeCallbacks = {
@@ -19,19 +20,21 @@ function Badge({
   label,
   active,
   activeColor,
+  activeBg,
   onClick,
 }: {
   label: string
   active: boolean
   activeColor: string
+  activeBg?: string
   onClick: () => void
 }) {
   return (
     <button
-      className="flex h-5 shrink-0 cursor-pointer items-center rounded px-1 text-[9px] font-semibold uppercase tracking-wider transition-colors"
+      className="flex h-5 shrink-0 cursor-pointer items-center rounded px-1.5 font-mono text-[9px] font-bold tracking-wider transition-all"
       onClick={(e) => { e.stopPropagation(); onClick() }}
       style={{
-        backgroundColor: active ? activeColor : 'transparent',
+        backgroundColor: active ? (activeBg || activeColor) : 'transparent',
         color: active ? 'white' : 'var(--java-muted)',
         border: active ? 'none' : '1px solid var(--line)',
       }}
@@ -111,25 +114,36 @@ function FieldRow({
   const isDecimal = DECIMAL_TYPES.has(type)
 
   return (
-    <div className="group flex flex-wrap items-center gap-1 border-b px-2 py-1.5 text-sm" style={{ borderColor: 'var(--line)' }}>
+    <div
+      className="group flex flex-wrap items-center gap-1.5 border-b px-2.5 py-1.5 text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+      style={{ borderColor: 'var(--line)' }}
+    >
+      {/* UML private access modifier symbol '-' */}
+      <span className="font-mono text-xs font-bold text-rose-500 select-none" title="private visibility">
+        -
+      </span>
+
+      {/* Field Name */}
       <input
-        className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-xs outline-none"
+        className="min-w-0 flex-1 bg-transparent px-1 py-0.5 font-mono text-xs font-semibold outline-none"
         placeholder="field_name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         onBlur={flush}
         style={{ color: 'var(--java-dark)' }}
       />
+
+      {/* Java Data Type Selector */}
       <select
-        className="w-20 rounded px-1 py-0.5 text-xs outline-none"
+        className="rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold outline-none transition-colors"
         value={type}
         onChange={(e) => { setType(e.target.value); setLengthVal(''); setPrecisionVal(''); setScaleVal('') }}
         onBlur={flush}
-        title='Variable Type'
+        title="Field Java & SQL Type"
         style={{
           backgroundColor: 'var(--chip-bg)',
           borderColor: 'var(--chip-line)',
-          color: 'var(--java-muted)',
+          color: 'var(--java-blue)',
           border: '1px solid',
         }}
       >
@@ -138,14 +152,15 @@ function FieldRow({
         ))}
       </select>
 
+      {/* Type-Specific Options (String Length) */}
       {isString && (
         <input
-          className="w-12 rounded px-1 py-0.5 text-[10px] outline-none"
+          className="w-11 rounded px-1 py-0.5 font-mono text-[10px] outline-none"
           placeholder="255"
           value={lengthVal}
           onChange={(e) => setLengthVal(e.target.value)}
           onBlur={flush}
-          title="Length"
+          title="Column length in VARCHAR(n)"
           style={{
             backgroundColor: 'var(--chip-bg)',
             borderColor: 'var(--chip-line)',
@@ -155,16 +170,17 @@ function FieldRow({
         />
       )}
 
+      {/* Decimal (Precision, Scale) */}
       {isDecimal && (
-        <span className="flex items-center gap-0.5 text-[10px]" style={{ color: 'var(--java-muted)' }}>
+        <span className="flex items-center gap-0.5 font-mono text-[10px]" style={{ color: 'var(--java-muted)' }}>
           (
           <input
-            className="w-8 rounded px-1 py-0.5 text-[10px] outline-none"
+            className="w-7 rounded px-1 py-0.5 font-mono text-[10px] outline-none"
             placeholder="19"
             value={precisionVal}
             onChange={(e) => setPrecisionVal(e.target.value)}
             onBlur={flush}
-            title="Precision"
+            title="Precision (total digits)"
             style={{
               backgroundColor: 'var(--chip-bg)',
               borderColor: 'var(--chip-line)',
@@ -174,12 +190,12 @@ function FieldRow({
           />
           ,
           <input
-            className="w-8 rounded px-1 py-0.5 text-[10px] outline-none"
+            className="w-7 rounded px-1 py-0.5 font-mono text-[10px] outline-none"
             placeholder="2"
             value={scaleVal}
             onChange={(e) => setScaleVal(e.target.value)}
             onBlur={flush}
-            title="Scale"
+            title="Scale (decimal places)"
             style={{
               backgroundColor: 'var(--chip-bg)',
               borderColor: 'var(--chip-line)',
@@ -191,31 +207,33 @@ function FieldRow({
         </span>
       )}
 
+      {/* Enum Values */}
       {type === 'ENUM' && (
         <input
-          className="min-w-0 flex-1 rounded px-1 py-0.5 text-[10px] outline-none"
+          className="min-w-0 flex-1 rounded px-1 py-0.5 font-mono text-[10px] outline-none"
           placeholder="ACTIVE, INACTIVE, PENDING"
           value={enumValuesStr}
           onChange={(e) => setEnumValuesStr(e.target.value)}
           onBlur={flush}
-          title="Comma-separated enum values"
+          title="Comma-separated Enum constants"
           style={{
             backgroundColor: 'var(--chip-bg)',
             borderColor: 'var(--chip-line)',
-            color: 'var(--java-muted)',
+            color: 'var(--java-orange-deep)',
             border: '1px solid',
           }}
         />
       )}
 
+      {/* Default SQL Expression */}
       {type !== 'ENUM' && type !== 'BOOLEAN' && (
         <input
-          className="w-16 rounded px-1 py-0.5 text-[10px] outline-none"
+          className="w-14 rounded px-1 py-0.5 font-mono text-[10px] outline-none"
           placeholder="DEFAULT"
           value={defaultValue}
           onChange={(e) => setDefaultValue(e.target.value)}
           onBlur={flush}
-          title="Default value (raw SQL fragment after DEFAULT)"
+          title="Default Column Value"
           style={{
             backgroundColor: 'var(--chip-bg)',
             borderColor: 'var(--chip-line)',
@@ -225,8 +243,9 @@ function FieldRow({
         />
       )}
 
-      <div className="flex items-center gap-0.5">
-        <HoverContent content='Primary Key'>
+      {/* Constraint Badges */}
+      <div className="flex items-center gap-1">
+        <HoverContent content="Primary Key (@Id)">
           <Badge
             label="PK"
             active={field.isPrimaryKey}
@@ -235,16 +254,16 @@ function FieldRow({
           />
         </HoverContent>
 
-        <HoverContent content='Nullable'>
+        <HoverContent content="Not Null (@Column nullable=false)">
           <Badge
-            label="NL"
+            label="NN"
             active={!field.isNullable}
             activeColor="var(--java-blue)"
             onClick={() => onChange(field.id, { isNullable: !field.isNullable })}
           />
         </HoverContent>
 
-        <HoverContent content='Unique'>
+        <HoverContent content="Unique Constraint (@Column unique=true)">
           <Badge
             label="UN"
             active={field.isUnique}
@@ -254,32 +273,30 @@ function FieldRow({
         </HoverContent>
       </div>
 
-      <div className="flex items-center gap-0.5">
+      {/* Row Order & Delete Actions */}
+      <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
         <button
-          className="flex h-5 w-4 cursor-pointer items-center justify-center rounded text-[10px] transition-opacity disabled:opacity-20 hover:opacity-100"
+          className="flex h-5 w-4 cursor-pointer items-center justify-center rounded text-[10px] disabled:opacity-20 hover:text-(--java-orange)"
           onClick={(e) => { e.stopPropagation(); onMoveUp(index) }}
           disabled={index === 0}
-          style={{ color: 'var(--java-muted)', opacity: index === 0 ? 0.2 : 0.4 }}
-          title="Move up"
+          title="Move property up"
         >
-          ▲
+          <ChevronUp className="size-3" />
         </button>
         <button
-          className="flex h-5 w-4 cursor-pointer items-center justify-center rounded text-[10px] transition-opacity disabled:opacity-20 hover:opacity-100"
+          className="flex h-5 w-4 cursor-pointer items-center justify-center rounded text-[10px] disabled:opacity-20 hover:text-(--java-orange)"
           onClick={(e) => { e.stopPropagation(); onMoveDown(index) }}
           disabled={index === total - 1}
-          style={{ color: 'var(--java-muted)', opacity: index === total - 1 ? 0.2 : 0.4 }}
-          title="Move down"
+          title="Move property down"
         >
-          ▼
+          <ChevronDown className="size-3" />
         </button>
         <button
-          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs transition-opacity hover:opacity-100"
+          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs hover:text-red-500"
           onClick={(e) => { e.stopPropagation(); onDelete(field.id) }}
-          style={{ color: 'var(--java-muted)', opacity: 0.4 }}
-          title="Delete field"
+          title="Delete property"
         >
-          ×
+          <X className="size-3" />
         </button>
       </div>
     </div>
@@ -297,7 +314,7 @@ function IndexRow({
 }) {
   const [name, setName] = useState(idx.name)
   const [columnsStr, setColumnsStr] = useState(idx.columns.join(', '))
-  
+
   const nameRef = useRef(name)
   if (idx.name !== nameRef.current) {
     nameRef.current = idx.name
@@ -316,9 +333,10 @@ function IndexRow({
   }, [idx.id, name, columnsStr, onChange])
 
   return (
-    <div className="group flex flex-wrap items-center gap-1 border-b px-2 py-1.5 text-sm" style={{ borderColor: 'var(--line)' }}>
+    <div className="group flex flex-wrap items-center gap-1.5 border-b px-2.5 py-1.5 text-xs" style={{ borderColor: 'var(--line)' }}>
+      <span className="font-mono text-[10px] font-bold text-amber-500">@Index</span>
       <input
-        className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-[10px] outline-none font-mono"
+        className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-[10px] outline-none font-mono font-semibold"
         placeholder="idx_name"
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -326,14 +344,14 @@ function IndexRow({
         style={{ color: 'var(--java-dark)' }}
       />
       <input
-        className="min-w-0 flex-1 px-1 py-0.5 text-[10px] outline-none font-mono"
+        className="min-w-0 flex-1 px-1.5 py-0.5 text-[10px] outline-none font-mono rounded"
         placeholder="col1, col2"
         value={columnsStr}
         onChange={(e) => setColumnsStr(e.target.value)}
         onBlur={flush}
-        style={{ color: 'var(--java-muted)', border: '1px solid var(--chip-line)', backgroundColor: 'var(--chip-bg)', borderRadius: '4px' }}
+        style={{ color: 'var(--java-muted)', border: '1px solid var(--chip-line)', backgroundColor: 'var(--chip-bg)' }}
       />
-      <HoverContent content='Unique'>
+      <HoverContent content="Unique Index">
         <Badge
           label="UN"
           active={idx.isUnique}
@@ -342,12 +360,11 @@ function IndexRow({
         />
       </HoverContent>
       <button
-        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs transition-opacity hover:opacity-100"
+        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs text-(--java-muted) hover:text-red-500"
         onClick={(e) => { e.stopPropagation(); onDelete(idx.id) }}
-        style={{ color: 'var(--java-muted)', opacity: 0.4 }}
         title="Delete index"
       >
-        ×
+        <X className="size-3" />
       </button>
     </div>
   )
@@ -368,6 +385,10 @@ export function EntityNode({
     tableRef.current = tableName
     setLocalTableName(tableName)
   }
+
+  const classNamePreview = useMemo(() => {
+    return toPascalCase(singularize(localTableName || 'Entity'))
+  }, [localTableName])
 
   const handleTableNameBlur = useCallback(() => {
     if (localTableName !== tableName) {
@@ -469,7 +490,7 @@ export function EntityNode({
       e.stopPropagation()
       const newIndex: IndexConfig = {
         id: crypto.randomUUID(),
-        name: `idx_${tableName.toLowerCase()}`,
+        name: `idx_${(tableName || 'table').toLowerCase()}`,
         columns: [],
         isUnique: false,
       }
@@ -480,68 +501,106 @@ export function EntityNode({
 
   return (
     <div
-      className="min-w-56 rounded-xl border-2 shadow-lg transition-shadow"
+      className="min-w-64 rounded-xl border-2 shadow-xl transition-all duration-150 backdrop-blur-sm"
       style={{
         borderColor: selected ? 'var(--java-orange)' : 'var(--line)',
         backgroundColor: 'var(--java-cream)',
         boxShadow: selected
-          ? '0 0 0 1px var(--java-orange), 0 8px 24px rgba(0,0,0,0.12)'
-          : '0 4px 16px rgba(0,0,0,0.08)',
+          ? '0 0 0 2px var(--java-orange), 0 12px 30px rgba(237, 139, 0, 0.25)'
+          : '0 8px 24px rgba(0,0,0,0.08)',
       }}
     >
+      {/* Target Handle (Left: Inbound / Many-to-One Target) */}
       <Handle
         type="target"
         position={Position.Left}
-        style={{ background: 'var(--java-blue)', width: 10, height: 10, border: '2px solid var(--java-cream)' }}
+        style={{
+          background: 'var(--java-blue)',
+          width: 12,
+          height: 12,
+          border: '2px solid var(--java-cream)',
+          left: -7,
+        }}
+        title="Target Handle (Inbound Association)"
       />
 
+      {/* Java Class Header */}
       <div
-        className="flex items-center gap-2 rounded-t-xl px-3 py-2"
+        className="rounded-t-[10px] px-3.5 py-2.5 text-white"
         style={{
           background: 'linear-gradient(135deg, var(--java-orange), var(--java-orange-deep))',
         }}
       >
-        <input
-          className="min-w-0 flex-1 bg-transparent text-sm font-bold text-white outline-none placeholder-white/60"
-          placeholder="TableName"
-          value={localTableName}
-          onChange={(e) => setLocalTableName(e.target.value)}
-          onBlur={handleTableNameBlur}
-        />
-        <button
-          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs text-white/60 transition-colors hover:text-white"
-          onClick={handleClone}
-          title="Clone entity"
-        >
-          <Copy className='size-4' />
-        </button>
-        <button
-          className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-xs text-white/60 transition-colors hover:text-white"
-          onClick={handleDelete}
-          title="Delete entity"
-        >
-          <X className='size-3' />
-        </button>
+        <div className="flex items-center justify-between gap-1.5 mb-1 text-[10px] font-mono text-white/80">
+          <div className="flex items-center gap-1">
+            <span className="font-bold">@Entity</span>
+            <span>@Table(name = "{localTableName || '...'}")</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              className="flex h-5 w-5 cursor-pointer items-center justify-center rounded text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+              onClick={handleClone}
+              title="Duplicate / Clone Class"
+            >
+              <Copy className="size-3.5" />
+            </button>
+            <button
+              className="flex h-5 w-5 cursor-pointer items-center justify-center rounded text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+              onClick={handleDelete}
+              title="Delete Class"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white text-[11px] font-extrabold text-(--java-orange) shadow-xs">
+            C
+          </div>
+          <div className="flex-1 flex flex-col">
+            <input
+              className="w-full bg-transparent font-mono text-sm font-bold text-white outline-none placeholder-white/50"
+              placeholder="table_name"
+              value={localTableName}
+              onChange={(e) => setLocalTableName(e.target.value)}
+              onBlur={handleTableNameBlur}
+            />
+          </div>
+          <span className="rounded bg-black/20 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white/90">
+            {classNamePreview}.java
+          </span>
+        </div>
       </div>
 
-      <div className="max-h-56 overflow-y-auto">
-        {fields.map((field, i) => (
-          <FieldRow
-            key={field.id}
-            field={field}
-            index={i}
-            total={fields.length}
-            onChange={handleFieldChange}
-            onDelete={handleDeleteField}
-            onMoveUp={(idx) => handleMoveField(idx, -1)}
-            onMoveDown={(idx) => handleMoveField(idx, 1)}
-          />
-        ))}
+      {/* Fields List (Class Attributes Compartment) */}
+      <div className="max-h-60 overflow-y-auto divide-y divide-line">
+        {fields.length === 0 ? (
+          <div className="p-3 text-center text-xs font-mono text-(--java-muted)">
+            // No properties declared
+          </div>
+        ) : (
+          fields.map((field, i) => (
+            <FieldRow
+              key={field.id}
+              field={field}
+              index={i}
+              total={fields.length}
+              onChange={handleFieldChange}
+              onDelete={handleDeleteField}
+              onMoveUp={(idx) => handleMoveField(idx, -1)}
+              onMoveDown={(idx) => handleMoveField(idx, 1)}
+            />
+          ))
+        )}
       </div>
 
+      {/* Indexes Compartment */}
       {indexes.length > 0 && (
-        <div className="border-t" style={{ borderColor: 'var(--line)' }}>
-          <div className="px-2 py-1 text-[10px] font-semibold uppercase text-gray-500">Indexes</div>
+        <div className="border-t divide-y divide-line" style={{ borderColor: 'var(--line)' }}>
+          <div className="bg-black/5 dark:bg-white/5 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-(--java-muted)">
+            // @Table Indexes ({indexes.length})
+          </div>
           <div className="max-h-32 overflow-y-auto">
             {indexes.map((idx) => (
               <IndexRow
@@ -555,37 +614,51 @@ export function EntityNode({
         </div>
       )}
 
-      <div className="flex" style={{ borderTop: '1px solid var(--line)' }}>
+      {/* Actions Footer */}
+      <div className="flex border-t" style={{ borderColor: 'var(--line)' }}>
         <button
-          className="flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-bl-xl px-3 py-2 text-xs font-semibold transition-colors"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-bl-[10px] px-3 py-2 text-xs font-mono font-bold transition-colors"
           onClick={handleAddField}
           style={{
-            color: 'var(--java-muted)',
+            color: 'var(--java-orange)',
             borderRight: '1px solid var(--line)',
+            backgroundColor: 'rgba(237, 139, 0, 0.04)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(237, 139, 0, 0.08)'; e.currentTarget.style.color = 'var(--java-orange)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--java-muted)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(237, 139, 0, 0.12)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(237, 139, 0, 0.04)' }}
         >
-          + Field
+          <Plus className="size-3.5" />
+          <span>Property</span>
         </button>
         <button
-          className="flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-br-xl px-3 py-2 text-xs font-semibold transition-colors"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-br-[10px] px-3 py-2 text-xs font-mono font-bold transition-colors"
           onClick={handleAddIndex}
           style={{
-            color: 'var(--java-muted)',
+            color: 'var(--java-blue)',
+            backgroundColor: 'rgba(0, 115, 150, 0.04)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(237, 139, 0, 0.08)'; e.currentTarget.style.color = 'var(--java-orange)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--java-muted)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 115, 150, 0.12)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 115, 150, 0.04)' }}
         >
-          + Index
+          <Plus className="size-3.5" />
+          <span>@Index</span>
         </button>
       </div>
 
+      {/* Source Handle (Right: Outbound / Owning Association Source) */}
       <Handle
         type="source"
         position={Position.Right}
-        style={{ background: 'var(--java-orange)', width: 10, height: 10, border: '2px solid var(--java-cream)' }}
+        style={{
+          background: 'var(--java-orange)',
+          width: 12,
+          height: 12,
+          border: '2px solid var(--java-cream)',
+          right: -7,
+        }}
+        title="Source Handle (Outbound Association)"
       />
     </div>
   )
 }
+

@@ -20,6 +20,7 @@ import type { EntityNodeCallbacks } from './entity-node'
 import { RelationshipEdge } from './relationship-edge'
 import type { Workspace } from '#/lib/schema'
 import { RELATIONSHIP_TYPES } from '#/lib/relationship-types'
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 
 const nodeTypes = { entity: EntityNode }
 const edgeTypes = { relationship: RelationshipEdge }
@@ -29,46 +30,35 @@ function ZoomControls() {
 
   return (
     <div
-      className="absolute bottom-4 right-4 z-10 flex flex-col overflow-hidden rounded-lg border shadow-lg"
+      className="absolute bottom-4 right-4 z-10 flex flex-col overflow-hidden rounded-xl border shadow-xl backdrop-blur-md"
       style={{
         borderColor: 'var(--line)',
         background: 'var(--surface-strong)',
       }}
     >
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center border-0 text-sm transition-colors hover:bg-black/5"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center border-0 text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5"
         style={{ color: 'var(--java-muted)', borderBottom: '1px solid var(--line)' }}
         onClick={() => zoomIn()}
-        title="Zoom in"
+        title="Zoom In (+)"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          <line x1="11" y1="8" x2="11" y2="14" />
-          <line x1="8" y1="11" x2="14" y2="11" />
-        </svg>
+        <ZoomIn className="size-4" />
       </button>
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center border-0 text-sm transition-colors hover:bg-black/5"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center border-0 text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5"
         style={{ color: 'var(--java-muted)', borderBottom: '1px solid var(--line)' }}
         onClick={() => zoomOut()}
-        title="Zoom out"
+        title="Zoom Out (-)"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          <line x1="8" y1="11" x2="14" y2="11" />
-        </svg>
+        <ZoomOut className="size-4" />
       </button>
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center border-0 text-sm transition-colors hover:bg-black/5"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center border-0 text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5"
         style={{ color: 'var(--java-muted)' }}
-        onClick={() => fitView()}
-        title="Fit view"
+        onClick={() => fitView({ padding: 0.2 })}
+        title="Fit All Entities (Space)"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-        </svg>
+        <Maximize2 className="size-3.5" />
       </button>
     </div>
   )
@@ -162,21 +152,24 @@ export function Canvas({ workspace, updateWorkspace, onCloneNode }: Props) {
   }))
 
   return (
-    <ReactFlow
-      nodes={nodesWithCallbacks}
-      edges={workspace.edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      defaultEdgeOptions={defaultEdgeOptions}
-      deleteKeyCode="Delete"
-      fitView
-      className="bg-(--bg-base)"
-    >
-      <Background gap={20} size={1} style={{ backgroundColor: 'var(--bg-base)', color: 'var(--line)' }} />
-      <ZoomControls />
-    </ReactFlow>
+    <div className="h-full w-full relative min-h-0 min-w-0" style={{ width: '100%', height: '100%' }}>
+      <ReactFlow
+        nodes={nodesWithCallbacks}
+        edges={workspace.edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        deleteKeyCode="Delete"
+        fitView
+        style={{ width: '100%', height: '100%' }}
+        className="bg-(--bg-base) h-full w-full"
+      >
+        <Background gap={20} size={1} style={{ backgroundColor: 'var(--bg-base)', color: 'var(--line)' }} />
+        <ZoomControls />
+      </ReactFlow>
+    </div>
   )
 }
