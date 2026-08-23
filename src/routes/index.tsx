@@ -3,17 +3,13 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   ArrowRight,
   Box,
-  CheckCircle2,
   Code2,
-  Copy,
   Cpu,
   Database,
   Download,
   FileCode,
-  Layers,
   Sparkles,
   Workflow,
-  Zap,
 } from 'lucide-react'
 import { Header } from '#/components/header'
 
@@ -394,6 +390,9 @@ function Home() {
 
           {/* Sample Class with Equivalent Code (Left-aligned, No Mac window UI) */}
           <SampleClassAndCode />
+
+          {/* Sample Class with Equivalent Code (Left-aligned, No Mac window UI) */}
+          <SampleClassAndCode />
         </section>
 
         {/* 4 OOP Pillars Section */}
@@ -501,7 +500,6 @@ function Home() {
               From Visual Diagram to Running Microservice
             </h2>
           </div>
-
           <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
               {

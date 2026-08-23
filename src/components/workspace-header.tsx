@@ -11,7 +11,6 @@ import {
   Download,
   Box,
   Workflow,
-  Sparkles,
   Code2,
 } from 'lucide-react'
 
