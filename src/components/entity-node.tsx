@@ -4,7 +4,7 @@ import type { NodeProps } from '@xyflow/react'
 import { FIELD_TYPES } from '../lib/field-types'
 import type { Field, EntityNodeData, IndexConfig } from '#/lib/schema'
 import { toPascalCase, singularize } from '#/lib/java-types'
-import { Copy, X, Key, ChevronUp, ChevronDown, Plus, Layers, Database } from 'lucide-react'
+import { Copy, X, ChevronUp, ChevronDown, Plus } from 'lucide-react'
 import HoverContent from './hover-content'
 
 export type EntityNodeCallbacks = {

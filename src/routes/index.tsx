@@ -13,13 +13,22 @@ import {
 } from 'lucide-react'
 import { Header } from '#/components/header'
 
+import {
+  EXAMPLES,
+  LIFECYCLE_STEPS,
+  type ExampleKey,
+} from '#/lib/landing-constants'
+
 export const Route = createFileRoute('/')({ component: Home })
 
 function SampleClassAndCode() {
-  const [activeTab, setActiveTab] = useState<'java' | 'sql'>('java')
+  const [selectedExample, setSelectedExample] = useState<ExampleKey>('customer')
+  const [activeLang, setActiveLang] = useState<'java' | 'sql'>('java')
+
+  const current = EXAMPLES[selectedExample]
 
   return (
-    <div className="mx-auto mt-14 w-full max-w-5xl text-left">
+    <div className="mx-auto mt-12 w-full max-w-5xl text-left">
       <div
         className="rounded-2xl border shadow-xl overflow-hidden backdrop-blur-md"
         style={{
@@ -27,7 +36,7 @@ function SampleClassAndCode() {
           backgroundColor: 'var(--surface-strong)',
         }}
       >
-        {/* Header Bar */}
+        {/* Main Toolbar / Tabs Header */}
         <div
           className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3"
           style={{
@@ -35,37 +44,60 @@ function SampleClassAndCode() {
             backgroundColor: 'var(--header-bg)',
           }}
         >
-          <div className="flex items-center gap-2 font-mono text-xs text-(--java-muted)">
-            <Code2 className="size-4 text-(--java-orange)" />
-            <span className="font-semibold text-(--java-dark)">
-              Visual Entity Model
+          {/* Entity Example Switcher Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+            <span className="font-mono text-xs font-bold text-(--java-muted) mr-1.5 hidden sm:inline">
+              Sample Entity:
             </span>
-            <span className="text-gray-400">→</span>
-            <span className="font-semibold text-(--java-blue)">
-              Generated Production Code
-            </span>
+            {(['customer', 'order', 'product'] as const).map((key) => {
+              const ex = EXAMPLES[key]
+              const isSelected = selectedExample === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSelectedExample(key)}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-semibold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-(--java-orange) text-white shadow-xs'
+                      : 'text-(--java-muted) hover:text-(--java-dark) hover:bg-black/5 dark:hover:bg-white/5 border border-line'
+                  }`}
+                >
+                  <div
+                    className={`flex h-3.5 w-3.5 items-center justify-center rounded-xs text-[8px] font-bold ${
+                      isSelected
+                        ? 'bg-white text-(--java-orange)'
+                        : 'bg-(--java-orange) text-white'
+                    }`}
+                  >
+                    C
+                  </div>
+                  <span>{ex.name}.java</span>
+                </button>
+              )
+            })}
           </div>
 
-          <div className="flex items-center gap-1.5">
+          {/* Language Output Selector */}
+          <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-lg border border-line">
             <button
-              onClick={() => setActiveTab('java')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-medium transition-all cursor-pointer ${
-                activeTab === 'java'
+              onClick={() => setActiveLang('java')}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-mono font-medium transition-all cursor-pointer ${
+                activeLang === 'java'
                   ? 'bg-(--java-orange) text-white font-bold shadow-xs'
-                  : 'text-(--java-muted) hover:text-(--java-dark) hover:bg-black/5 dark:hover:bg-white/5'
+                  : 'text-(--java-muted) hover:text-(--java-dark)'
               }`}
             >
-              <span>Customer.java</span>
+              <span>Java JPA</span>
             </button>
             <button
-              onClick={() => setActiveTab('sql')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-medium transition-all cursor-pointer ${
-                activeTab === 'sql'
+              onClick={() => setActiveLang('sql')}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-mono font-medium transition-all cursor-pointer ${
+                activeLang === 'sql'
                   ? 'bg-(--java-blue) text-white font-bold shadow-xs'
-                  : 'text-(--java-muted) hover:text-(--java-dark) hover:bg-black/5 dark:hover:bg-white/5'
+                  : 'text-(--java-muted) hover:text-(--java-dark)'
               }`}
             >
-              <span>V1__create_customers.sql</span>
+              <span>Flyway SQL</span>
             </button>
           </div>
         </div>
@@ -75,260 +107,156 @@ function SampleClassAndCode() {
           className="grid lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x"
           style={{ borderColor: 'var(--line)' }}
         >
-          {/* Left Column: Visual OOP Class Diagram Card */}
-          <div className="lg:col-span-5 p-5 sm:p-6 bg-(--bg-base)/60 text-left">
-            <div className="text-xs font-mono font-bold uppercase tracking-wider text-(--java-muted) mb-3">
-              // Canvas Entity Node
+          {/* Left Column: Visual OOP Class Diagram Card + Architecture Details */}
+          <div className="lg:col-span-5 p-5 sm:p-6 bg-(--bg-base)/60 text-left flex flex-col justify-between gap-4">
+            <div>
+              <div className="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-(--java-muted) mb-3">
+                <span>// Visual Class Model</span>
+                <span className="text-[10px] text-(--java-orange)">
+                  Canvas Node
+                </span>
+              </div>
+
+              {/* UML Entity Node */}
+              <div className="rounded-xl border-2 border-(--line) shadow-md overflow-hidden bg-(--java-cream)">
+                {/* Class Header */}
+                <div
+                  className="px-4 py-3 text-white"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, var(--java-orange), var(--java-orange-deep))',
+                  }}
+                >
+                  <div className="flex items-center justify-between text-[10px] font-mono text-white/80 mb-1">
+                    <span>@Entity @Table(name = "{current.tableName}")</span>
+                    <span className="rounded bg-black/20 px-1.5 py-0.2">
+                      {current.badgeLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-[11px] font-extrabold text-(--java-orange)">
+                      C
+                    </div>
+                    <span className="font-mono text-sm font-bold text-white">
+                      {current.name}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Attributes Compartment */}
+                <div className="divide-y divide-line font-mono text-xs text-left">
+                  {current.fields.map((field, idx) => (
+                    <div
+                      key={field.name}
+                      className={`flex items-center justify-between px-3 py-2 ${
+                        idx % 2 === 0 ? 'bg-black/2 dark:bg-white/2' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-rose-500 font-bold">-</span>
+                        <span className="text-(--java-blue) font-semibold">
+                          {field.type}
+                        </span>
+                        <span className="font-semibold text-(--java-dark)">
+                          {field.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {field.badges.map((b) => (
+                          <span
+                            key={b.label}
+                            className="rounded px-1.5 py-0.5 text-[9px] font-bold"
+                            style={{
+                              color: b.color,
+                              backgroundColor: b.bg || 'rgba(0, 0, 0, 0.05)',
+                            }}
+                          >
+                            {b.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Indexes Compartment */}
+                {current.indexes.length > 0 && (
+                  <div className="border-t border-line px-3 py-2 bg-black/5 dark:bg-white/5 font-mono text-[10px] text-left">
+                    {current.indexes.map((idx) => (
+                      <div
+                        key={idx.name}
+                        className="flex items-center justify-between text-(--java-muted)"
+                      >
+                        <span>
+                          @Index:{' '}
+                          <strong className="text-(--java-dark)">
+                            {idx.name}
+                          </strong>
+                        </span>
+                        {idx.unique && (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                            UNIQUE
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Architectural Pattern Summary Card (Fills extra vertical space) */}
+              <div className="mt-4 rounded-xl border border-line p-3.5 bg-black/5 dark:bg-white/5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold text-(--java-dark)">
+                    {current.patternTitle}
+                  </span>
+                  <span className="java-chip text-[9px] py-0.5 px-1.5 text-(--java-muted)">
+                    Architecture
+                  </span>
+                </div>
+                <p className="text-xs text-(--java-muted) leading-relaxed m-0">
+                  {current.description}
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {current.highlights.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded bg-black/10 dark:bg-white/10 px-2 py-0.5 font-mono text-[10px] text-(--java-muted)"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* UML Entity Node */}
-            <div className="rounded-xl border-2 border-(--line) shadow-md overflow-hidden bg-(--java-cream)">
-              {/* Class Header */}
-              <div
-                className="px-4 py-3 text-white"
-                style={{
-                  background:
-                    'linear-gradient(135deg, var(--java-orange), var(--java-orange-deep))',
-                }}
+            {/* Quick Link to Studio */}
+            <div className="pt-2 border-t border-line flex items-center justify-between">
+              <Link
+                to="/workspace"
+                className="flex items-center gap-1.5 font-mono text-xs font-bold text-(--java-orange) hover:underline"
               >
-                <div className="flex items-center justify-between text-[10px] font-mono text-white/80 mb-1">
-                  <span>@Entity @Table(name = "customers")</span>
-                  <span className="rounded bg-black/20 px-1.5 py-0.2">
-                    JPA Model
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-[11px] font-extrabold text-(--java-orange)">
-                    C
-                  </div>
-                  <span className="font-mono text-sm font-bold text-white">
-                    Customer
-                  </span>
-                </div>
-              </div>
-
-              {/* Attributes Compartment */}
-              <div className="divide-y divide-line font-mono text-xs text-left">
-                <div className="flex items-center justify-between px-3 py-2 bg-black/2 dark:bg-white/2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-rose-500 font-bold">-</span>
-                    <span className="text-(--java-blue) font-semibold">
-                      UUID
-                    </span>
-                    <span className="font-semibold text-(--java-dark)">id</span>
-                  </div>
-                  <span className="rounded bg-(--java-orange)/20 px-1.5 py-0.5 text-[9px] font-bold text-(--java-orange)">
-                    @Id PK
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between px-3 py-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-rose-500 font-bold">-</span>
-                    <span className="text-(--java-blue) font-semibold">
-                      String
-                    </span>
-                    <span className="font-semibold text-(--java-dark)">
-                      email
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[9px] font-bold">
-                    <span className="rounded bg-(--java-blue)/20 px-1.5 py-0.5 text-(--java-blue)">
-                      NN
-                    </span>
-                    <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-amber-600 dark:text-amber-400">
-                      UN
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between px-3 py-2 bg-black/2 dark:bg-white/2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-rose-500 font-bold">-</span>
-                    <span className="text-(--java-blue) font-semibold">
-                      String
-                    </span>
-                    <span className="font-semibold text-(--java-dark)">
-                      fullName
-                    </span>
-                  </div>
-                  <span className="rounded bg-(--java-blue)/20 px-1.5 py-0.5 text-[9px] font-bold text-(--java-blue)">
-                    NN
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between px-3 py-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-rose-500 font-bold">-</span>
-                    <span className="text-(--java-orange-deep) font-semibold">
-                      CustomerTier
-                    </span>
-                    <span className="font-semibold text-(--java-dark)">
-                      tier
-                    </span>
-                  </div>
-                  <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[9px] font-bold text-purple-600 dark:text-purple-400">
-                    ENUM
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between px-3 py-2 bg-black/2 dark:bg-white/2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-rose-500 font-bold">-</span>
-                    <span className="text-(--spring-green) font-semibold">
-                      List&lt;Order&gt;
-                    </span>
-                    <span className="font-semibold text-(--java-dark)">
-                      orders
-                    </span>
-                  </div>
-                  <span className="rounded bg-(--spring-green)/20 px-1.5 py-0.5 text-[9px] font-bold text-(--spring-green)">
-                    @OneToMany
-                  </span>
-                </div>
-              </div>
-
-              {/* Indexes Compartment */}
-              <div className="border-t border-line px-3 py-2 bg-black/5 dark:bg-white/5 font-mono text-[10px] text-left">
-                <div className="flex items-center justify-between text-(--java-muted)">
-                  <span>
-                    @Index:{' '}
-                    <strong className="text-(--java-dark)">
-                      idx_customer_email
-                    </strong>
-                  </span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                    UNIQUE
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between text-[11px] font-mono text-(--java-muted)">
-              <span>⚡ Drag-and-drop handles</span>
-              <span>↻ Live 2-way sync</span>
+                <span>Design on Canvas</span>
+                <ArrowRight className="size-3.5" />
+              </Link>
+              <span className="text-[11px] font-mono text-(--java-muted)">
+                Instant Spring Initializr
+              </span>
             </div>
           </div>
 
-          {/* Right Column: Equivalent Generated Code (Left-aligned) */}
+          {/* Right Column: Equivalent Generated Code */}
           <div className="lg:col-span-7 bg-[#161519] dark:bg-[#0e0d10] p-5 sm:p-6 text-left overflow-x-auto">
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-800 font-mono text-[11px] text-gray-400">
-              <span className="text-amber-400 font-semibold">
-                {activeTab === 'java'
-                  ? 'src/main/java/com/entityforge/domain/models/Customer.java'
-                  : 'src/main/resources/db/migration/V1__create_customers.sql'}
+              <span className="text-amber-400 font-semibold truncate">
+                {activeLang === 'java' ? current.javaFile : current.sqlFile}
               </span>
-              <span className="text-gray-500 uppercase">{activeTab}</span>
+              <span className="text-gray-500 uppercase shrink-0 ml-2">
+                {activeLang}
+              </span>
             </div>
 
-            {activeTab === 'java' ? (
-              <pre className="font-mono text-xs leading-relaxed text-gray-200 text-left whitespace-pre m-0">
-                <span className="text-purple-400">package</span>{' '}
-                com.entityforge.domain.models;{'\n\n'}
-                <span className="text-purple-400">import</span>{' '}
-                jakarta.persistence.*;{'\n'}
-                <span className="text-purple-400">import</span>{' '}
-                java.io.Serializable;{'\n'}
-                <span className="text-purple-400">import</span> java.util.*;
-                {'\n\n'}
-                <span className="text-amber-400">@Entity</span>
-                {'\n'}
-                <span className="text-amber-400">@Table</span>(name ={' '}
-                <span className="text-emerald-400">"customers"</span>, indexes ={' '}
-                {'{'}
-                {'\n'}
-                {'    '}
-                <span className="text-amber-400">@Index</span>(name ={' '}
-                <span className="text-emerald-400">"idx_customer_email"</span>,
-                columnList = <span className="text-emerald-400">"email"</span>,
-                unique = <span className="text-purple-400">true</span>){'\n'}
-                {'}'}){'\n'}
-                <span className="text-purple-400">public class</span>{' '}
-                <span className="text-sky-300 font-bold">Customer</span>{' '}
-                <span className="text-purple-400">implements</span> Serializable{' '}
-                {'{\n\n'}
-                {'    '}
-                <span className="text-amber-400">@Id</span>
-                {'\n'}
-                {'    '}
-                <span className="text-amber-400">@GeneratedValue</span>(strategy
-                = GenerationType.UUID){'\n'}
-                {'    '}
-                <span className="text-purple-400">private</span> UUID id;
-                {'\n\n'}
-                {'    '}
-                <span className="text-amber-400">@Column</span>(name ={' '}
-                <span className="text-emerald-400">"email"</span>, length = 128,
-                nullable = <span className="text-purple-400">false</span>,
-                unique = <span className="text-purple-400">true</span>){'\n'}
-                {'    '}
-                <span className="text-purple-400">private</span> String email;
-                {'\n\n'}
-                {'    '}
-                <span className="text-amber-400">@Column</span>(name ={' '}
-                <span className="text-emerald-400">"full_name"</span>, length =
-                100, nullable = <span className="text-purple-400">false</span>)
-                {'\n'}
-                {'    '}
-                <span className="text-purple-400">private</span> String
-                fullName;{'\n\n'}
-                {'    '}
-                <span className="text-amber-400">@Enumerated</span>
-                (EnumType.STRING){'\n'}
-                {'    '}
-                <span className="text-amber-400">@Column</span>(name ={' '}
-                <span className="text-emerald-400">"tier"</span>, nullable ={' '}
-                <span className="text-purple-400">false</span>){'\n'}
-                {'    '}
-                <span className="text-purple-400">private</span> CustomerTier
-                tier;{'\n\n'}
-                {'    '}
-                <span className="text-amber-400">@OneToMany</span>(mappedBy ={' '}
-                <span className="text-emerald-400">"customer"</span>, cascade =
-                CascadeType.ALL, orphanRemoval ={' '}
-                <span className="text-purple-400">true</span>){'\n'}
-                {'    '}
-                <span className="text-purple-400">private</span>{' '}
-                List&lt;Order&gt; orders ={' '}
-                <span className="text-purple-400">new</span>{' '}
-                ArrayList&lt;&gt;();{'\n\n'}
-                {'    '}
-                <span className="text-gray-500">
-                  // Standard constructors, getters, setters &
-                  equals/hashCode...
-                </span>
-                {'\n'}
-                {'}'}
-              </pre>
-            ) : (
-              <pre className="font-mono text-xs leading-relaxed text-sky-200 text-left whitespace-pre m-0">
-                <span className="text-purple-400">CREATE TABLE</span> customers
-                ({'\n'}
-                {'    '}id <span className="text-amber-300">UUID NOT NULL</span>
-                ,{'\n'}
-                {'    '}email{' '}
-                <span className="text-amber-300">VARCHAR(128) NOT NULL</span>,
-                {'\n'}
-                {'    '}full_name{' '}
-                <span className="text-amber-300">VARCHAR(100) NOT NULL</span>,
-                {'\n'}
-                {'    '}tier{' '}
-                <span className="text-amber-300">VARCHAR(32) NOT NULL</span>,
-                {'\n'}
-                {'    '}
-                <span className="text-purple-400">PRIMARY KEY</span> (id),{'\n'}
-                {'    '}
-                <span className="text-purple-400">CONSTRAINT</span>{' '}
-                uq_customers_email{' '}
-                <span className="text-purple-400">UNIQUE</span> (email){'\n'}
-                );{'\n\n'}
-                <span className="text-purple-400">
-                  CREATE UNIQUE INDEX
-                </span>{' '}
-                idx_customer_email <span className="text-purple-400">ON</span>{' '}
-                customers (email);
-              </pre>
-            )}
+            {activeLang === 'java' ? current.javaCode : current.sqlCode}
           </div>
         </div>
       </div>
@@ -388,10 +316,7 @@ function Home() {
             </div>
           </div>
 
-          {/* Sample Class with Equivalent Code (Left-aligned, No Mac window UI) */}
-          <SampleClassAndCode />
-
-          {/* Sample Class with Equivalent Code (Left-aligned, No Mac window UI) */}
+          {/* Interactive Multi-Entity Tabbed Code Showcase */}
           <SampleClassAndCode />
         </section>
 
@@ -501,32 +426,7 @@ function Home() {
             </h2>
           </div>
           <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[
-              {
-                step: '01',
-                title: 'Define Class Hierarchy',
-                badge: 'public class',
-                desc: 'Instantiate entity nodes on canvas, add typed attributes, and configure database table names.',
-              },
-              {
-                step: '02',
-                title: 'Link Associations',
-                badge: '@Relationship',
-                desc: 'Drag Bezier edges between nodes to define JPA cardinality and foreign key cascading.',
-              },
-              {
-                step: '03',
-                title: 'Inspect Real-time Code',
-                badge: '.java & .sql',
-                desc: 'Watch Java entity sources and Flyway migration scripts compile synchronously in memory.',
-              },
-              {
-                step: '04',
-                title: 'Compile & Execute',
-                badge: 'mvn spring-boot:run',
-                desc: 'Download standard Maven zip archive and start building your Spring Boot application immediately.',
-              },
-            ].map(({ step, title, badge, desc }) => (
+            {LIFECYCLE_STEPS.map(({ step, title, badge, desc }) => (
               <div
                 key={step}
                 className="java-class-card p-5 sm:p-6 relative group transition-all hover:-translate-y-1"

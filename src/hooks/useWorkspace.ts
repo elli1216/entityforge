@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Route } from '#/routes/workspace'
 import { WorkspaceSchema } from '#/lib/schema'
-import type { Workspace, Field } from '#/lib/schema'
+import type { Workspace, Field, Index } from '#/lib/schema'
 
 const STORAGE_KEY = 'current_draft'
 const MAX_HISTORY = 50
@@ -104,6 +104,7 @@ export function useWorkspace() {
         data: {
           tableName: '',
           fields: [] as Field[],
+          indexes: [] as Index[],
         },
       }
       return { ...prev, nodes: [...prev.nodes, newEntity] }

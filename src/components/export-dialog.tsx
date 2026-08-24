@@ -4,15 +4,10 @@ import type { ProdDb } from '#/lib/project-exporter'
 import { handleError } from '#/lib/error-handler'
 import {
   Archive,
-  Check,
-  ChevronRight,
   Cpu,
   Database,
   Download,
-  FileCode,
-  Folder,
   Layers,
-  Sparkles,
   X,
 } from 'lucide-react'
 

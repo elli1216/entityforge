@@ -8,7 +8,7 @@ import { CodeViewer } from '#/components/code-viewer'
 import { WorkspaceHeader } from '#/components/workspace-header'
 import { ExportDialog } from '#/components/export-dialog'
 import { ConfirmDialog } from '#/components/confirm-dialog'
-import { Plus, Sparkles, Box, Code2, Layers, Cpu } from 'lucide-react'
+import { Plus, Sparkles, Box } from 'lucide-react'
 import { RELATIONSHIP_TYPES } from '#/lib/relationship-types'
 import type { Workspace } from '#/lib/schema'
 

@@ -21,7 +21,8 @@ export const IndexSchema = z.object({
   columns: z.array(z.string()),
   isUnique: z.boolean().default(false),
 })
-export type IndexConfig = z.infer<typeof IndexSchema>
+export type Index = z.infer<typeof IndexSchema>
+export type IndexConfig = Index
 
 export const EntityNodeSchema = z.object({
   id: z.string(),

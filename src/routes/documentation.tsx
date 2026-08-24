@@ -2,11 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import {
   BookOpen,
   Box,
-  Code2,
-  Cpu,
   Database,
   Download,
-  FileCode2,
   Key,
   Layers,
   Sparkles,
