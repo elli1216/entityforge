@@ -30,7 +30,9 @@ export function useWorkspace() {
   const workspaceRef = useRef(workspace)
   workspaceRef.current = workspace
 
-  const persistTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const persistTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
   const past = useRef<Workspace[]>([])
   const future = useRef<Workspace[]>([])
   const [, setHistoryTick] = useState(0)
@@ -135,23 +137,45 @@ export function useWorkspace() {
     }
   }, [draft, navigate])
 
-  const cloneEntity = useCallback((nodeId: string) => {
-    updateWorkspace((prev) => {
-      const source = prev.nodes.find((n) => n.id === nodeId)
-      if (!source) return prev
-      const cloned = {
-        ...source,
-        id: crypto.randomUUID(),
-        position: { x: source.position.x + 30, y: source.position.y + 30 },
-        data: {
-          ...source.data,
-          tableName: source.data.tableName ? `${source.data.tableName} (copy)` : '',
-          fields: source.data.fields.map((f) => ({ ...f, id: crypto.randomUUID() })),
-        },
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          redo()
+        } else {
+          undo()
+        }
       }
-      return { ...prev, nodes: [...prev.nodes, cloned] }
-    })
-  }, [updateWorkspace])
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo, redo])
+
+  const cloneEntity = useCallback(
+    (nodeId: string) => {
+      updateWorkspace((prev) => {
+        const source = prev.nodes.find((n) => n.id === nodeId)
+        if (!source) return prev
+        const cloned = {
+          ...source,
+          id: crypto.randomUUID(),
+          position: { x: source.position.x + 30, y: source.position.y + 30 },
+          data: {
+            ...source.data,
+            tableName: source.data.tableName
+              ? `${source.data.tableName} (copy)`
+              : '',
+            fields: source.data.fields.map((f) => ({
+              ...f,
+              id: crypto.randomUUID(),
+            })),
+          },
+        }
+        return { ...prev, nodes: [...prev.nodes, cloned] }
+      })
+    },
+    [updateWorkspace],
+  )
 
   const resetWorkspace = useCallback(() => {
     updateWorkspace({ nodes: [], edges: [] })
