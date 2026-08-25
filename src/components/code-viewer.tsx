@@ -6,7 +6,6 @@ import json from 'highlight.js/lib/languages/json'
 import type { Workspace } from '#/lib/schema'
 import { generateJpaEntity, generateEnums } from '#/lib/jpa-generator'
 import { generateDdl } from '#/lib/ddl-generator'
-import { handleError } from '#/lib/error-handler'
 import {
   Check,
   Copy,
@@ -35,7 +34,10 @@ export type FileTab = {
 
 function highlight(code: string, lang: string): string {
   try {
-    const result = hljs.highlight(code, { language: lang, ignoreIllegals: true })
+    const result = hljs.highlight(code, {
+      language: lang,
+      ignoreIllegals: true,
+    })
     return result.value
   } catch {
     return code
@@ -119,21 +121,23 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
     [activeFile],
   )
 
-  const handleCopy = useCallback(async () => {
+  const handleCopy = useCallback(() => {
     if (!activeFile) return
-    try {
-      await navigator.clipboard.writeText(activeFile.code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch (e) {
-      handleError(e, 'Copy failed')
-    }
+    navigator.clipboard.writeText(activeFile.code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }, [activeFile])
 
   // Group files by category for project tree navigation
-  const entities = useMemo(() => files.filter((f) => f.kind === 'entity'), [files])
+  const entities = useMemo(
+    () => files.filter((f) => f.kind === 'entity'),
+    [files],
+  )
   const enums = useMemo(() => files.filter((f) => f.kind === 'enum'), [files])
-  const migrations = useMemo(() => files.filter((f) => f.kind === 'ddl'), [files])
+  const migrations = useMemo(
+    () => files.filter((f) => f.kind === 'ddl'),
+    [files],
+  )
   const schemas = useMemo(() => files.filter((f) => f.kind === 'json'), [files])
 
   return (
@@ -143,9 +147,7 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
     >
       {/* Side File Navigation Panel (Always Visible on the Side) */}
       {!sidebarCollapsed && (
-        <aside
-          className="w-48 sm:w-56 md:w-64 shrink-0 flex flex-col border-r border-line bg-(--surface-strong) transition-all"
-        >
+        <aside className="w-48 sm:w-56 md:w-64 shrink-0 flex flex-col border-r border-line bg-(--surface-strong) transition-all">
           {/* Navigation Panel Header */}
           <div className="flex items-center justify-between border-b border-line px-3 py-2.5">
             <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-(--java-dark)">
@@ -172,7 +174,9 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
                   </div>
                 ) : (
                   entities.map((file) => {
-                    const isSelected = (activeFile && activeFile.id === file.id) || (!activeId && file === files[0])
+                    const isSelected =
+                      (activeFile && activeFile.id === file.id) ||
+                      (!activeId && file === files[0])
                     return (
                       <button
                         key={file.id}
@@ -185,7 +189,9 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
                       >
                         <div
                           className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-xs text-[9px] font-extrabold ${
-                            isSelected ? 'bg-white text-(--java-orange)' : 'bg-(--java-orange) text-white'
+                            isSelected
+                              ? 'bg-white text-(--java-orange)'
+                              : 'bg-(--java-orange) text-white'
                           }`}
                         >
                           C
@@ -220,7 +226,9 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
                       >
                         <div
                           className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-xs text-[9px] font-extrabold ${
-                            isSelected ? 'bg-(--duke-blue) text-white' : 'bg-(--java-orange-glow) text-white'
+                            isSelected
+                              ? 'bg-(--duke-blue) text-white'
+                              : 'bg-(--java-orange-glow) text-white'
                           }`}
                         >
                           E
@@ -297,15 +305,15 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
       {/* Main Code Inspector Area */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Top Header & Breadcrumb Bar */}
-        <div
-          className="flex shrink-0 items-center justify-between border-b border-line px-3 py-2 bg-(--surface)"
-        >
+        <div className="flex shrink-0 items-center justify-between border-b border-line px-3 py-2 bg-(--surface)">
           <div className="flex items-center gap-2 min-w-0">
             {/* Toggle File Tree Collapse */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="flex items-center gap-1 rounded-md border border-line px-2 py-1 font-mono text-[11px] font-semibold text-(--java-orange) bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
-              title={sidebarCollapsed ? 'Show File Explorer' : 'Hide File Explorer'}
+              title={
+                sidebarCollapsed ? 'Show File Explorer' : 'Hide File Explorer'
+              }
             >
               {sidebarCollapsed ? (
                 <>
@@ -322,18 +330,27 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
             {/* Breadcrumb Path */}
             {activeFile ? (
               <div className="flex items-center gap-1.5 truncate font-mono text-xs text-(--java-muted)">
-                <span className="text-amber-500 font-bold hidden sm:inline">📁</span>
-                <span className="truncate text-(--java-dark) font-semibold">{activeFile.filePath}</span>
+                <span className="text-amber-500 font-bold hidden sm:inline">
+                  📁
+                </span>
+                <span className="truncate text-(--java-dark) font-semibold">
+                  {activeFile.filePath}
+                </span>
               </div>
             ) : (
-              <span className="font-mono text-xs text-(--java-muted)">Source Code Inspector</span>
+              <span className="font-mono text-xs text-(--java-muted)">
+                Source Code Inspector
+              </span>
             )}
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             {activeFile && (
               <span className="hidden md:inline font-mono text-[10px] text-(--java-muted)">
-                {lineCount} lines • <strong className="uppercase text-(--java-orange)">{activeFile.lang}</strong>
+                {lineCount} lines •{' '}
+                <strong className="uppercase text-(--java-orange)">
+                  {activeFile.lang}
+                </strong>
               </span>
             )}
 
@@ -348,8 +365,14 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
                 }}
                 title="Copy code to clipboard"
               >
-                {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                <span className="font-mono text-[11px]">{copied ? 'Copied!' : 'Copy'}</span>
+                {copied ? (
+                  <Check className="size-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
+                <span className="font-mono text-[11px]">
+                  {copied ? 'Copied!' : 'Copy'}
+                </span>
               </button>
             )}
 
@@ -403,5 +426,3 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
     </div>
   )
 }
-
-

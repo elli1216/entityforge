@@ -17,7 +17,9 @@ export function generateDdl(
     .join('\n\n')
   const indexes = generateIndexes(nodes)
   const foreignKeys = generateForeignKeys(nodes, edges)
-  const content = [createTables, indexes, foreignKeys].filter(Boolean).join('\n\n')
+  const content = [createTables, indexes, foreignKeys]
+    .filter(Boolean)
+    .join('\n\n')
 
   return {
     migrationName: `V${version}__create_initial_schema`,
@@ -33,7 +35,9 @@ function generateIndexes(nodes: EntityNode[]): string {
       if (idx.columns.length === 0) continue
       const uniqueStr = idx.isUnique ? 'UNIQUE ' : ''
       const cols = idx.columns.join(', ')
-      statements.push(`CREATE ${uniqueStr}INDEX ${idx.name} ON ${node.data.tableName} (${cols});`)
+      statements.push(
+        `CREATE ${uniqueStr}INDEX ${idx.name} ON ${node.data.tableName} (${cols});`,
+      )
     }
   }
   return statements.join('\n')
@@ -49,7 +53,9 @@ function generateCreateTable(node: EntityNode): string {
     const colName = field.name || field.id
     const parts = [`    ${colName} ${info.sqlType}`]
 
-    if (field.defaultValue) parts.push(`DEFAULT ${field.defaultValue}`)
+    if (field.defaultValue) {
+      parts.push(`DEFAULT ${field.defaultValue.replace(/;/g, '')}`)
+    }
     if (!field.isNullable) parts.push('NOT NULL')
     if (field.isUnique && !field.isPrimaryKey) parts.push('UNIQUE')
 
