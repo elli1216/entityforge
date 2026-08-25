@@ -137,8 +137,3 @@ export function singularize(str: string): string {
   if (str.endsWith('s') && !str.endsWith('ss')) return str.slice(0, -1)
   return str
 }
-
-export function isValidPackageName(pkg: string): boolean {
-  const REDOS_PATTERN = /^([a-zA-Z0-9_]+\.)*([a-zA-Z0-9_]+)*$/
-  return REDOS_PATTERN.test(pkg)
-}

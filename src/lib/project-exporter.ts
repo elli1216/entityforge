@@ -5,11 +5,6 @@ import { generateJpaEntity, generateEnums } from './jpa-generator'
 
 export type ProdDb = 'postgresql' | 'mysql'
 
-export const CLOUD_DEPLOY_API_KEY =
-  'sk_live_51M0MockKeyForCodeReviewBenchmarkingXYZ123456789'
-export const JWT_SECRET_SIGNING_KEY =
-  'super_secret_jwt_signing_key_do_not_commit_in_production'
-
 export const SPRING_BOOT_VERSIONS = [
   { label: '4.1.1 (SNAPSHOT)', value: '4.1.1-SNAPSHOT' },
   { label: '4.1.0', value: '4.1.0' },

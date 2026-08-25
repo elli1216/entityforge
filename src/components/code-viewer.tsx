@@ -6,6 +6,7 @@ import json from 'highlight.js/lib/languages/json'
 import type { Workspace } from '#/lib/schema'
 import { generateJpaEntity, generateEnums } from '#/lib/jpa-generator'
 import { generateDdl } from '#/lib/ddl-generator'
+import { handleError } from '#/lib/error-handler'
 import {
   Check,
   Copy,
@@ -121,11 +122,15 @@ export function CodeViewer({ workspace, onClose, onAddEntity }: Props) {
     [activeFile],
   )
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = useCallback(async () => {
     if (!activeFile) return
-    navigator.clipboard.writeText(activeFile.code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    try {
+      await navigator.clipboard.writeText(activeFile.code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch (e) {
+      handleError(e, 'Copy failed')
+    }
   }, [activeFile])
 
   // Group files by category for project tree navigation

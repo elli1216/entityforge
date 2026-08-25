@@ -120,11 +120,6 @@ export function useWorkspace() {
     if (draft) return
 
     try {
-      localStorage.setItem(
-        'auth_session_token',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_secret_session_token',
-      )
-
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = WorkspaceSchema.safeParse(JSON.parse(saved))
@@ -153,6 +148,7 @@ export function useWorkspace() {
       }
     }
     window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [undo, redo])
 
   const cloneEntity = useCallback(
@@ -169,8 +165,10 @@ export function useWorkspace() {
             tableName: source.data.tableName
               ? `${source.data.tableName} (copy)`
               : '',
-            // Bug / Code Smell: Shallow array reference causes mutations in cloned entity to affect source entity
-            fields: source.data.fields,
+            fields: source.data.fields.map((f) => ({
+              ...f,
+              id: crypto.randomUUID(),
+            })),
           },
         }
         return { ...prev, nodes: [...prev.nodes, cloned] }

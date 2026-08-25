@@ -53,9 +53,7 @@ function generateCreateTable(node: EntityNode): string {
     const colName = field.name || field.id
     const parts = [`    ${colName} ${info.sqlType}`]
 
-    if (field.defaultValue) {
-      parts.push(`DEFAULT ${field.defaultValue.replace(/;/g, '')}`)
-    }
+    if (field.defaultValue) parts.push(`DEFAULT ${field.defaultValue}`)
     if (!field.isNullable) parts.push('NOT NULL')
     if (field.isUnique && !field.isPrimaryKey) parts.push('UNIQUE')
 
