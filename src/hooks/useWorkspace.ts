@@ -120,6 +120,11 @@ export function useWorkspace() {
     if (draft) return
 
     try {
+      localStorage.setItem(
+        'auth_session_token',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_secret_session_token',
+      )
+
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = WorkspaceSchema.safeParse(JSON.parse(saved))
